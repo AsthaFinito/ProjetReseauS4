@@ -96,6 +96,7 @@ char* GetSizeCommande(char MotAReturn[256]);
 char* GetLimitCommande(char MotAReturn[256]);
 void AfficheMatriceDeJeu(CASE Matrice[L][C]);
 char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]);
+void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char NewCouleur[10]);
 
 
 
@@ -255,6 +256,7 @@ int main()
 			 	ListeConnec[i].events = POLLIN;
 			 	printf(" strlen(messageEnvoi) == %d \n",strlen(messageEnvoi));
 			 	int EcritureServeur = write(ListeConnec[i].fd, messageEnvoi, strlen(messageEnvoi));
+			 	
 				switch (EcritureServeur) {
 				    case -1:
 				        printf("Cannot write : (Ecriture serveur = -1) \n");
@@ -329,6 +331,8 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	}
 	else if(strcmp(Message,"/setPixel\n")==0){
 		printf("Commande ok /setPixel \n");
+		SetPixelCommande(MatriceDeJeu,0,0,"100100100");
+		strcpy(messageEnvoi,"Pixel correctement modifié \n");
 	
 	}
 	
@@ -397,6 +401,20 @@ char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]){
 		strcat(MotAReturn,"\n");
 	}
 	return MotAReturn;
+
+}
+
+void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char NewCouleur[10]){
+
+	printf("Modification de la matrice \n");
+	if(ChoixLigne>L || ChoixColonne>C){
+	
+		printf("Erreur dans les positions \n");
+	}
+	else{
+	
+		strcpy(MatriceDeJeu[ChoixLigne][ChoixColonne].couleur,NewCouleur);
+	}
 
 }
 
