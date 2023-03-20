@@ -12,7 +12,7 @@
 
 
 #define PORT IPPORT_USERRESERVED // = 5000
-#define LG_MESSAGE 256
+#define LG_MESSAGE 453
 #define L 4
 #define C 8
 #define Max_Pixel 10
@@ -21,12 +21,13 @@
 int POSITION_TABLEAU = 1;
 char messageEnvoi[LG_MESSAGE];/* le message de la couche Application ! */
 
+
 typedef struct CASE{
 	char couleur[10]; //couleur format RRRGGGBBB
 
 }CASE;
 
-
+CASE MatriceDeJeu[L][C];
 
 typedef struct Users {
   int data;
@@ -84,15 +85,17 @@ void afficherListe(queue *liste)
 
 
 
-void initMartice(CASE matrice[L][C]);
+void initMatrice(CASE matrice[L][C]);
 void setPixel(CASE matrice[L][C], int posL, int posC, char val[10]);
 char *getMatrice(CASE matrice[L][C]);
 char *getSize();
 
 
 void MessageADecomposer(char Message[LG_MESSAGE]);
-char* GetSizeCommande(char* MotAReturn);
-char* GetLimitCommande(char* MotAReturn);
+char* GetSizeCommande(char MotAReturn[256]);
+char* GetLimitCommande(char MotAReturn[256]);
+void AfficheMatriceDeJeu(CASE Matrice[L][C]);
+char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]);
 
 
 
@@ -111,8 +114,8 @@ int main()
 
 	
 	
-	CASE matrice[L][C];
-	initMartice(matrice);
+
+	
 
 	// Partie SOCKET
 
@@ -176,6 +179,8 @@ int main()
     	struct sockaddr_in UsersArrive;
     	socklen_t LongueurAddresseUser = sizeof(UsersArrive);
 		
+	
+	initMatrice(MatriceDeJeu);
 	// boucle d’attente de connexion : en théorie, un serveur attend indéfiniment !
 	
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -240,6 +245,7 @@ int main()
 			 	}
 			 	else{
 			 		printf("Lecture d'un message \n");
+			 		messageRecu[DetectionAction]='\0';
 			 		MessageADecomposer(messageRecu);
 			 		ListeConnec[i].events = POLLOUT;
 			 	}
@@ -247,16 +253,23 @@ int main()
 			 else  if (ListeConnec[i].fd!=-1 && ListeConnec[i].revents & POLLOUT) {
 			 	printf("C'est quel cas? \n");
 			 	ListeConnec[i].events = POLLIN;
+			 	printf(" strlen(messageEnvoi) == %d \n",strlen(messageEnvoi));
 			 	int EcritureServeur = write(ListeConnec[i].fd, messageEnvoi, strlen(messageEnvoi));
 				switch (EcritureServeur) {
 				    case -1:
-				        perror("write");
-				        close(ListeConnec[i].fd);
+				        printf("Cannot write : (Ecriture serveur = -1) \n");
+				       // close(ListeConnec[i].fd);
 				        
-				        exit(-6);
-				     
+				        //exit(-6);
+				        
+				        break;
+				    case 0:
+				    	printf("Bad file descriptor? \n");
+				    	exit(-1);
+				    	break;
 				    default:
-				        printf("%s\n(%d octets)\n\n", messageEnvoi, EcritureServeur);
+				        //printf("%s\n(%d octets)\n\n", messageEnvoi, EcritureServeur);
+				        break;
 				}
 			 }
 			 
@@ -279,8 +292,9 @@ int main()
 void MessageADecomposer(char Message[LG_MESSAGE]){
 
 	printf("Entrez dans MessageADecomposer \n");
-	printf("Voici le message recu : %s \n",Message);
-	char MessageAfficheClient[250];
+	printf("Voici le message recu : [%s] \n",Message);
+	char MessageAfficheClient[256];
+	char TestMatrice[2000];
 	if(strcmp(Message,"/getSize\n")==0){  //done
 		printf("Commande ok /getSize \n");
 		
@@ -289,7 +303,12 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	}
 	else if(strcmp(Message,"/getMatrice\n")==0){
 		printf("Commande ok /getMatrice \n");
-		 strcpy(messageEnvoi,getMatrice(matrice, l*c));
+		 //strcpy(messageEnvoi,getMatrice(matrice, l*c));
+		 //AfficheMatriceDeJeu(MatriceDeJeu);
+		 ReturnMatriceDeJeu(MatriceDeJeu,TestMatrice);
+		 strcpy(messageEnvoi,TestMatrice);
+		 printf(messageEnvoi);
+		 printf("Fin de /getMatrice \n");
 	
 	}
 	else if(strcmp(Message,"/getLimits\n")==0){ //done
@@ -301,7 +320,7 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	else if(strcmp(Message,"/getVersion\n")==0){
 		printf("Commande ok /getVersion \n");
 		//printf("Version 1.2 \n");
-		strcpy(messageEnvoi,"Version 1.2 \n");
+		strcpy(messageEnvoi,"Version 1.2");
 	
 	}
 	else if(strcmp(Message,"/getWaitTime\n")==0){
@@ -318,18 +337,20 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 		printf("Bad command \n");
 		strcpy(messageEnvoi,"Bad Command \n");
 	}
+	strcpy(Message,"");
+	strcpy(MessageAfficheClient,"");
 
 }
 
 
-char* GetLimitCommande(char* MotAReturn){
+char* GetLimitCommande(char MotAReturn[256]){
 
 	printf("Voici les limites du jeu PixelWar : \n");
 	char temp[150];
-	char temp2[4];
-	sprintf(temp2,"%d",Max_Pixel);
-	strcat(temp,temp2);
-	strcat(temp," est le nombre de pixel max par minute \n");
+	char temp2[3];
+	sprintf(temp2, "%d",Max_Pixel);
+	strcpy(temp,temp2);
+	//strcat(temp," est le nombre de pixel max par minute \n");
 	
 	strcat(MotAReturn,temp);
 	return MotAReturn;
@@ -338,7 +359,7 @@ char* GetLimitCommande(char* MotAReturn){
 
 
 
-void initMartice(CASE matrice[L][C]){
+void initMatrice(CASE matrice[L][C]){
 
 	for (int i = 0; i < L; ++i)//parcours des lignes
 	{
@@ -347,6 +368,36 @@ void initMartice(CASE matrice[L][C]){
 			strcpy(matrice[i][j].couleur,"255255255");
 		}
 	}
+}
+
+
+void AfficheMatriceDeJeu(CASE Matrice[L][C]){
+
+	for (int i = 0; i < L; ++i)//parcours des lignes
+	{
+		for (int j = 0; j < C; ++j)//parcours des colonnes 
+		{
+			printf("| %s | ",Matrice[i][j].couleur);
+		}
+		printf("\n");
+	}
+
+}
+
+char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]){
+
+	for (int i = 0; i < L; ++i)//parcours des lignes
+	{
+		for (int j = 0; j < C; ++j)//parcours des colonnes 
+		{
+			strcat(MotAReturn,"| ");
+			strcat(MotAReturn,Matrice[i][j].couleur);
+			strcat(MotAReturn," | ");
+		}
+		strcat(MotAReturn,"\n");
+	}
+	return MotAReturn;
+
 }
 
 void setPixel(CASE matrice[L][C], int posL, int posC, char val[10]){
@@ -381,7 +432,7 @@ char *getSize(){//C et L paramettre de serveur
 }
 
 
-char* GetSizeCommande(char* MotAReturn){
+char* GetSizeCommande(char MotAReturn[256]){
 
 	printf("Voici les dimensions de la matrice : \n");
 	char temp[10];
