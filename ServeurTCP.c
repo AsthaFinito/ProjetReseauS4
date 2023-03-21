@@ -99,7 +99,9 @@ char* GetLimitCommande(char MotAReturn[256]);
 void AfficheMatriceDeJeu(CASE Matrice[L][C]);
 char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]);
 void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char NewCouleur[10]);
-void DecoupeMessageSetPixel(char* MessageComplet);
+int DecoupeMessageSetPixel(char* MessageComplet);
+void TestDecoupageMessage();
+void TestPixelOutOfBound(char MessagePixel[20]);
 
 
 
@@ -293,7 +295,7 @@ int main()
 	return 0;
 }
 
-void DecoupeMessageSetPixel(char* MessageComplet){
+int DecoupeMessageSetPixel(char* MessageComplet){
 
 	char Decoupage[2]=" ";
 	char *token;
@@ -309,6 +311,7 @@ void DecoupeMessageSetPixel(char* MessageComplet){
 			printf("Erreur pour le /setPixel (trop d'argument ) \n");
 			strcpy(messageEnvoi,"10 Bad Command");
 			token=NULL;
+			return -1;
 			
 			
 			
@@ -334,9 +337,57 @@ void DecoupeMessageSetPixel(char* MessageComplet){
 	
 		printf("Lecture du tableau %s \n",TableauDecoupage[i]);
 	}
+	return 1;
 	
 }
 
+void TestPixelOutOfBound(char MessagePixel[20]){
+
+	char *token;
+	char Separateur[2]="x";
+	int compteur=0;
+	token=strtok(MessagePixel,Separateur);
+	strcpy(TableauDecoupagePosition[compteur],token);
+	while(token!=NULL){
+	
+		compteur++;
+		
+		token=strtok(NULL,Separateur);
+		if(token!=NULL){
+			strcpy(TableauDecoupagePosition[compteur],token);
+		}
+		
+	}
+	printf("Lecture du tableau mais que Pixel %s et %s  \n",TableauDecoupagePosition[0],TableauDecoupagePosition[1]);
+	if(atoi(TableauDecoupagePosition[0])<0 || atoi(TableauDecoupagePosition[0])>L){
+	
+		printf("Erreur dans les coo (ligne) \n");
+		strcpy(messageEnvoi,"12 PixelOutOfBond \n");
+		
+	}
+	else if(atoi(TableauDecoupagePosition[1])<0 || atoi(TableauDecoupagePosition[1])>C){
+		printf("Erreur dans les coo (colonne) \n");
+		strcpy(messageEnvoi,"12 PixelOutOfBond \n");
+	}
+	else{
+		printf("Coordonnées Valide \n");
+	}
+
+}
+
+void TestDecoupageMessage(){
+
+	char test1[20];
+	char test2[20];
+	strcpy(test1,TableauDecoupage[1]);
+	strcpy(test2,TableauDecoupage[2]);
+	printf("Chaine 1 :%s \n",test1);
+	printf("Chaine 2 :%s \n",test2);
+	TestPixelOutOfBound(test1);
+	
+	
+	
+}
 
 void MessageADecomposer(char Message[LG_MESSAGE]){
 
@@ -386,7 +437,16 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	
 	else{
 		printf("Bad command \n");
-		DecoupeMessageSetPixel(Message);
+		int test=DecoupeMessageSetPixel(Message);
+		if(test==-1){
+		
+			printf("Mauvaise Commande \n");
+		}
+		else if(test==1){
+		
+			printf("Verification des coo et de la couleur \n");
+			TestDecoupageMessage();
+		}
 		//strcpy(messageEnvoi,"Bad Command \n");
 	}
 	strcpy(Message,"");
