@@ -20,6 +20,8 @@
 
 int POSITION_TABLEAU = 1;
 char messageEnvoi[LG_MESSAGE];/* le message de la couche Application ! */
+char TableauDecoupage[3][500];
+char TableauDecoupagePosition[2][10];
 
 
 typedef struct CASE{
@@ -97,6 +99,7 @@ char* GetLimitCommande(char MotAReturn[256]);
 void AfficheMatriceDeJeu(CASE Matrice[L][C]);
 char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]);
 void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char NewCouleur[10]);
+void DecoupeMessageSetPixel(char* MessageComplet);
 
 
 
@@ -290,6 +293,50 @@ int main()
 	return 0;
 }
 
+void DecoupeMessageSetPixel(char* MessageComplet){
+
+	char Decoupage[2]=" ";
+	char *token;
+	token=strtok(MessageComplet,Decoupage);
+	int compteur =0;
+	
+	strcpy(TableauDecoupage[compteur],token);
+	while(token!=NULL){
+	
+		
+		if(compteur>=3){
+		
+			printf("Erreur pour le /setPixel (trop d'argument ) \n");
+			strcpy(messageEnvoi,"10 Bad Command");
+			token=NULL;
+			
+			
+			
+		}
+		else{
+		
+			printf("Valeur du token = %s\n",token);
+			token = strtok(NULL, Decoupage);
+			compteur++;
+			if(token!=NULL){
+			
+				strcpy(TableauDecoupage[compteur],token);
+			}
+			
+			
+			strcpy(messageEnvoi,"00 OK");
+			
+		}
+		
+		
+	}
+	for(int i=0;i<3;i++){
+	
+		printf("Lecture du tableau %s \n",TableauDecoupage[i]);
+	}
+	
+}
+
 
 void MessageADecomposer(char Message[LG_MESSAGE]){
 
@@ -339,7 +386,8 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	
 	else{
 		printf("Bad command \n");
-		strcpy(messageEnvoi,"Bad Command \n");
+		DecoupeMessageSetPixel(Message);
+		//strcpy(messageEnvoi,"Bad Command \n");
 	}
 	strcpy(Message,"");
 	strcpy(MessageAfficheClient,"");
