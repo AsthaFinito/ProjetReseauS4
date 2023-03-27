@@ -12,14 +12,14 @@
 
 
 #define PORT IPPORT_USERRESERVED // = 5000
-#define LG_MESSAGE 453
+#define LG_MESSAGE 500
 #define L 4
 #define C 8
 #define Max_Pixel 10
 #define VERSION 1.5
 
 int POSITION_TABLEAU = 1;
-char messageEnvoi[LG_MESSAGE];/* le message de la couche Application ! */
+char messageEnvoi[2000];/* le message de la couche Application ! */
 char TableauDecoupage[3][500];
 char TableauDecoupagePosition[2][10];
 char base46_map[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -125,11 +125,41 @@ size_t b64_encoded_size(size_t inlen);
 int TestChiffreDansBits(char* IN);
 
 
+void TestLancementServeur(int argc, char *argv[]){
 
+	
+	 int opt;
+    int port=0, c=0, l=0, maxClients=0;
 
-int main()
+	// Vérifie que la commande a la forme attendue
+    if (argc != 7) {
+        fprintf(stderr, "Usage: %s [-p PORT] [-s LxH] [-l MAX_CLIENTS]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    while ((opt = getopt(argc, argv, "p:s:l:")) != -1) {
+        switch (opt) {
+            case 'p':
+                port = atoi(optarg);
+                break;
+            case 's':
+                sscanf(optarg, "%dx%d", &c, &l);
+                break;
+            case 'l':
+                maxClients = atoi(optarg);
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-p PORT] [-s LxH] [-l MAX_CLIENTS]\n", argv[0]);
+                exit(EXIT_FAILURE);
+        }
+    }
+
+}
+
+int main(int argc, char *argv[])
 {
 
+	TestLancementServeur(argc,argv);
 	
 	int socketEcoute;
 	struct sockaddr_in pointDeRencontreLocal;
@@ -282,7 +312,7 @@ int main()
 			 	printf("C'est quel cas? \n");
 			 	ListeConnec[i].events = POLLIN;
 			 	printf(" strlen(messageEnvoi) == %d \n",strlen(messageEnvoi));
-			 	int EcritureServeur = write(ListeConnec[i].fd, messageEnvoi, strlen(messageEnvoi));
+			 	int EcritureServeur = write(ListeConnec[i].fd, messageEnvoi, strlen(messageEnvoi)+100);
 			 	
 				switch (EcritureServeur) {
 				    case -1:
@@ -309,7 +339,7 @@ int main()
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		
 		// On envoie des données vers le client (cf. protocole)
-		
+	//strcpy(messageEnvoi,"");	
 	}
 
 	// On ferme la ressource avant de quitter
@@ -654,6 +684,11 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	printf("Voici le message recu : [%s] \n",Message);
 	char MessageAfficheClient[256];
 	char TestMatrice[2000];
+	
+	    char pattern[] = "/setPixel";
+
+	    // On teste si la chaîne commence par le motif
+	    
 	if(strcmp(Message,"/getSize\n")==0){  //done
 		printf("Commande ok /getSize \n");
 		
@@ -665,6 +700,7 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 		 //strcpy(messageEnvoi,getMatrice(matrice, l*c));
 		 //AfficheMatriceDeJeu(MatriceDeJeu);
 		 ReturnMatriceDeJeu(MatriceDeJeu,TestMatrice);
+		
 		 strcpy(messageEnvoi,TestMatrice);
 		 printf(messageEnvoi);
 		 printf("Fin de /getMatrice \n");
@@ -693,21 +729,26 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	
 	}
 	
-	
-	else{
-		printf("Bad command \n");
+	 
+	else if(strncmp(Message, pattern, strlen(pattern))==0){
 		int test=DecoupeMessageSetPixel(Message);
-		
+		printf("Dans le cas ou sa commance par /setPixel \n");
 		if(test==-1){
 		
 			printf("Mauvaise Commande \n");
+			strcpy(messageEnvoi,"10 Bad Command");
 		}
 		else if(test==1){
 		
 			printf("Verification des coo et de la couleur \n");
 			TestDecoupageMessage();
 		}
-		//strcpy(messageEnvoi,"Bad Command \n");
+		
+	}
+	else{
+		printf("Bad command \n"); //Ajout d'un test pour le cas ou le client tape nimp
+		
+		strcpy(messageEnvoi,"99 Unknow command \n");
 	}
 	strcpy(Message,"");
 	strcpy(MessageAfficheClient,"");
@@ -737,7 +778,7 @@ void initMatrice(CASE matrice[L][C]){
 	{
 		for (int j = 0; j < C; ++j)//parcours des colonnes 
 		{
-			strcpy(matrice[i][j].couleur,"255255255");
+			strcpy(matrice[i][j].couleur,"MjU1MjU1MjU1");
 		}
 	}
 }
@@ -749,7 +790,7 @@ void AfficheMatriceDeJeu(CASE Matrice[L][C]){
 	{
 		for (int j = 0; j < C; ++j)//parcours des colonnes 
 		{
-			printf("| %s | ",Matrice[i][j].couleur);
+			printf("%s",Matrice[i][j].couleur);
 		}
 		printf("\n");
 	}
@@ -762,11 +803,11 @@ char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]){
 	{
 		for (int j = 0; j < C; ++j)//parcours des colonnes 
 		{
-			strcat(MotAReturn,"| ");
+			
 			strcat(MotAReturn,Matrice[i][j].couleur);
-			strcat(MotAReturn," | ");
+			
 		}
-		strcat(MotAReturn,"\n");
+		
 	}
 	return MotAReturn;
 
