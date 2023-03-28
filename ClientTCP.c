@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h> /* pour exit */
 #include <unistd.h> /* pour close */
@@ -21,10 +22,11 @@ void TestLancementClient(int argc, char *argv[]);
 void InterpretationMessageBoucle(char *MessageRecu);
 char* base64_encode(char* plain);
 int Menu();
-int InterpretationMenu(char input);
+int InterpretationMenu(char *input);
+void CasSetPixel();
 
 
-
+char RenvoieSetPixel[100];
 
 int main(int argc, char *argv[]){
 
@@ -104,7 +106,7 @@ int main(int argc, char *argv[]){
 				break;
 
 		}
-	
+		strcpy(messageEnvoi,"");
 		lus = read(socketEcoute, messageRecu, LG_MESSAGE*sizeof(char));
 		//printf("Le message recu est : %s \n",messageRecu);
 		switch(lus)
@@ -158,35 +160,42 @@ void TestLancementClient(int argc, char *argv[]){
 
 
 }
-int InterpretationMenu(char input){
-
-	if(input=='a'){
+int InterpretationMenu(char *input){
+	printf("Lettre reçu dans l'interpretation : [%s] \n",input);
+	if(strcmp(input,"1\0")==0){
 		printf("Vous avez choisi le getSize \n");
 		strcpy(messageEnvoi,"/getSize\n");
 		return 1;
 	}
-	else if(input=='b'){
+	else if(strcmp(input,"2\0")==0){
 	
 		printf("Vous avez choisi le getLimits \n");
 		strcpy(messageEnvoi,"/getLimits\n");
 		return 1;
 	}
-	else if(input=='c'){
+	else if(strcmp(input,"3\0")==0){
 	
 		printf("Vous avez choisi le getMatrice \n");
 		strcpy(messageEnvoi,"/getMatrice\n");
 		return 1;
 	}
-	else if(input=='d'){
+	else if(strcmp(input,"4\0")==0){
 	
 		printf("Vous avez choisi le setPixel \n");
-		strcpy(messageEnvoi,"/setPixel 3x3 128128128\n");
+		CasSetPixel();
+		//strcpy(messageEnvoi,"/setPixel 0x0 128128128\n");
 		return 1;
 	}
-	else if(input=='e'){
+	else if(strcmp(input,"5\0")==0){
 	
 		printf("Vous avez choisi le getWaitTime \n");
 		//strcpy(messageEnvoi,"/getSize");
+		return 1;
+	}
+	else if(strcmp(input,"6\0")==0){
+	
+		printf("Vous avez choisi le getWaitTime \n");
+		strcpy(messageEnvoi,"/getVersion\n");
 		return 1;
 	}
 	else{
@@ -197,21 +206,69 @@ int InterpretationMenu(char input){
 
 }
 
+void CasSetPixel(){
+
+
+	strcat(RenvoieSetPixel,"/setPixel ");
+
+	printf("Veuillez rentrer une position-> Forme : LxC \n");
+	char input[30];
+	fgets(input, 30, stdin); 
+	int pos = strchr(input, '\n') - input;
+    	if (pos >= 0 && pos < strlen(input)) {
+    	
+        	input[pos] = '\0';
+        	//printf(" backslashN enlevé à %d\n",pos);
+   	 } 
+   	 strcat(RenvoieSetPixel,input);
+   	 strcat(RenvoieSetPixel," ");
+   	 printf("Veuillez rentrer une couleur-> Forme : RGBRGBRGB \n");
+   	 fgets(input, 30, stdin); 
+   	 pos= strchr(input, '\n') - input;
+   	 if (pos >= 0 && pos < strlen(input)) {
+    	
+        	input[pos] = '\0';
+        	printf(" backslashN enlevé à %d\n",pos);
+   	 } 
+   	// strcat(RenvoieSetPixel,input);
+   	 strcpy(input,base64_encode(input));
+   	 printf("Valeur de la couleur encodé : [%s] \n",input);
+   	 strcat(RenvoieSetPixel,input);
+   	 strcat(RenvoieSetPixel,"\n");
+   	 strcpy(messageEnvoi,RenvoieSetPixel);
+   	  strcpy(RenvoieSetPixel,"");
+   	// printf("Envoie au serveur : [%s]\n",RenvoieSetPixel);
+	
+}
+
 int Menu(){
 
-	
+	strcpy(messageEnvoi,"");
 	printf("Choissisez une fonction : \n");
-	printf("	A - getSize \n");
-	printf("	B - getLimits \n");
-	printf("	C - getMatrice \n");
-	printf("	D - setPixel \n");
-	printf("	E - getWaitTime \n");
-	char input;
-	scanf("%c",&input);
-	
-	printf("Voici la touche tapé : [%c] \n",input);
+	printf("	1 - getSize \n");
+	printf("	2 - getLimits \n");
+	printf("	3 - getMatrice \n");
+	printf("	4 - setPixel \n");
+	printf("	5 - getWaitTime \n");
+	printf("	6 - getVersion \n");
+	char input[10];
+	fgets(input, 10, stdin); // Lecture de la chaîne de caractères avec fgets
+
+    	// Recherche de la position du caractère \n dans la chaîne
+    	int pos = strchr(input, '\n') - input;
+    	if (pos >= 0 && pos < strlen(input)) {
+    	
+        	input[pos] = '\0';
+        	printf(" backslashN enlevé à %d\n",pos);
+   	 }
+   	 else{
+   	 
+   	 	printf("Pas de modification \n");
+   	 }
+	printf("Voici la touche tapé : [%s] \n",input);
 	int test_FinInterpretation=InterpretationMenu(input);
 	if(test_FinInterpretation==1){
+		printf("Envoie au serveur : [%s]\n",messageEnvoi);
 		return 1;
 	}
 	else{
