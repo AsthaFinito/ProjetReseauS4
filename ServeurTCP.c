@@ -430,7 +430,8 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 		
 		
 			
-			strcpy(CHAINE_ENCODE,base64_encode(MessageColor)); // encode en base64 
+			//strcpy(CHAINE_ENCODE,base64_encode(MessageColor)); 
+			strcpy(CHAINE_ENCODE,MessageColor);// encode en base64 
 			unsigned int SIZE_OF_ENCODE=b64_encoded_size(strlen(CHAINE_ENCODE));
 			printf(" [%s] encoded \n",CHAINE_ENCODE); //j'affiche
 			printf("Valeur de b64_encoded_size : %d \n",SIZE_OF_ENCODE);
@@ -715,7 +716,7 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	else if(strcmp(Message,"/getVersion\n")==0){
 		printf("Commande ok /getVersion \n");
 		//printf("Version 1.2 \n");
-		strcpy(messageEnvoi,"Version 1.2");
+		strcpy(messageEnvoi,"Version 1");
 	
 	}
 	else if(strcmp(Message,"/getWaitTime\n")==0){
