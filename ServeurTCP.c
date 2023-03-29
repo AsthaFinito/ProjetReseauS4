@@ -62,11 +62,11 @@ void InitialisationQueue(queue* q) {
   q->suivant = NULL;
 }
 
-void AjoutQueue(queue* q, int data) {
+void AjoutQueue(queue* q, int data,int coup_restant) {
   Users* NouvelleUsers = (Users*)malloc(sizeof(Users));
   NouvelleUsers->data = data;
   NouvelleUsers->suivant = NULL;
-  NouvelleUsers->coup_restant = 1;
+  NouvelleUsers->coup_restant = coup_restant;
   if (q->first == NULL) {
     
     q->first = NouvelleUsers;
@@ -126,6 +126,7 @@ int b64_decode(const char *in, unsigned char *out, size_t outlen);
 int b64_isvalidchar(char c);
 size_t b64_encoded_size(size_t inlen);
 int TestChiffreDansBits(char* IN);
+void AfficheStatUser(Users *User);
 
 
 void TestLancementServeur(int argc, char *argv[]){
@@ -134,9 +135,9 @@ void TestLancementServeur(int argc, char *argv[]){
 	 int opt;
     int port=0, c=0, l=0, maxClients=0;
 
-	// Vérifie que la commande a la forme attendue
+
     if (argc != 7) {
-        fprintf(stderr, "Usage: %s [-p PORT] [-s LxH] [-l MAX_CLIENTS]\n", argv[0]);
+        fprintf(stderr, "Usage: %s -p PORT -s LxH -l MAX_CLIENTS\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -161,6 +162,7 @@ void TestLancementServeur(int argc, char *argv[]){
 queue ListeUsersPoll;
 int sec_left;
 int actionUsers;
+int statut=0;
 
 int main(int argc, char *argv[])
 {
@@ -257,13 +259,19 @@ int main(int argc, char *argv[])
 			time_t now = time(NULL); // obtenir l'heure actuelle en secondes depuis l'époque UNIX
 		 struct tm * timeinfo = localtime(&now); // convertir en structure tm contenant les informations de temps	
 		    sec_left = 60 - timeinfo->tm_sec;
+		    statut=0;
 		    if(sec_left==1){
-		    	ListeUsersPoll.first->coup_restant=1;
+		    	statut=1;
 		    	
+		    	
+		    }
+		    if(statut==1){
+		    	ListeUsersPoll.first->coup_restant=1;
+		    	statut=0;
 		    }
 		   // printf("Il reste %d secondes avant la prochaine minute.\n", sec_left);
 		//printf("Dans le while \n"); //Partie init du poll
-		if(poll(ListeConnec,100,-1)==-1){
+		if(poll(ListeConnec,10,-1)==-1){
 			printf("Erreur Init du poll \n");
 			
 		}
@@ -281,7 +289,7 @@ int main(int argc, char *argv[])
 			int NewUser = accept(socketEcoute, (struct sockaddr*)&UsersArrive, &LongueurAddresseUser);
 			printf("Valeur du Newuser : %d \n",NewUser);
 			
-			AjoutQueue(&ListeUsersPoll,NewUser);
+			AjoutQueue(&ListeUsersPoll,NewUser,1);
 			afficherListe(&ListeUsersPoll);
 			ListeConnec[POSITION_TABLEAU].fd=NewUser;
 			POSITION_TABLEAU++;
@@ -317,7 +325,7 @@ int main(int argc, char *argv[])
 			 	}
 			 	else if(DetectionAction==0){
 			 		printf("Deconnexion d'un client \n");
-			 		//close(ListeConnec[i].fd);
+			 		close(ListeConnec[i].fd);
 			 		POSITION_TABLEAU--;
 			 	
 			 	}
@@ -337,7 +345,7 @@ int main(int argc, char *argv[])
 			 	printf("Affichage de messageEnvoi : \n");
 			 	printf("'%s'",messageEnvoi);
 			 	printf("\n");
-			 	int EcritureServeur = send(ListeConnec[i].fd, messageEnvoi, 385,0);
+			 	int EcritureServeur = write(ListeConnec[i].fd, messageEnvoi, 100);
 			 	
 				switch (EcritureServeur) {
 				    case -1:
@@ -368,7 +376,7 @@ int main(int argc, char *argv[])
 	}
 
 	// On ferme la ressource avant de quitter
-	//close(socketEcoute);
+	close(socketEcoute);
 	return 0;
 }
 
@@ -438,6 +446,17 @@ int TestChiffreDansBits(char* IN){
 	return 0;
 }
 
+void AfficheStatUser(Users *User){
+	printf("Affichage des stats de l'user : \n");
+	printf("%d -> coup restant \n",User->coup_restant);
+	if(User->suivant==NULL){
+		printf("Pas de suivant à l'user \n");
+	}else{
+	
+		printf("Un autre user suit \n");
+	}
+}
+
 void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 
 	printf("La couleur est : %s \n",MessageColor);
@@ -483,27 +502,45 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 				printf("Valeur de actionUser : %d \n",actionUsers);
 				
 				//on chercher qui a fait l'action
-				//on regarde si il a assez de pixel
-				//si oui on modifie le pixel
-				//si non on renvoie 20 outOfQuota
+				
 				if(actionUsers==compteur){
-					printf("Debut le else \n");
-					
-					//Modifié le coup des pixel ici
-					printf("Avant modif de matrice \n");
+					printf("C'est le premier client qui a fait l'action \n");
+					ParcourtDeLaQueue=ListeUsersPoll.first;
+				}
+				else{
+					printf("On recherche quel client a fait l'action \n");
+					for(int i = 1; i < actionUsers && ParcourtDeLaQueue->suivant != NULL; i++) {
+							printf("Recherche de place \n");
+						    ParcourtDeLaQueue = ParcourtDeLaQueue->suivant;
+						    
+						  }
+				}
+				printf("Fin de la recherche \n");
+				if(ParcourtDeLaQueue==NULL){
+				
+					printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
+				}else{
+				
+					printf("All good \n");
+				}
+				AfficheStatUser(ParcourtDeLaQueue);
+				if(ParcourtDeLaQueue->coup_restant==0){
+					printf("Impossible de poser le pixel \n");
+					strcpy(messageEnvoi,"20 OutOfQuota");
+				}
+				else{
+					printf("Coup possible \n");
 					printf("Valeur de ligne et de colonne : [%d] [%d] \n",Ligne,Colonne);
 					strcpy(MatriceDeJeu[Ligne][Colonne].couleur,CHAINE_ENCODE);
 					printf("Après modif de matrice \n");
 					strcpy(messageEnvoi,"00 OK");
-					
-				
-				}
-				
-				else{
-					
-					
+					ParcourtDeLaQueue->coup_restant=ParcourtDeLaQueue->coup_restant-1;
 					
 				}
+				//on regarde si il a assez de pixel
+				//si oui on modifie le pixel
+				//si non on renvoie 20 outOfQuota
+				
 				
 			}
 			
@@ -917,7 +954,7 @@ char* getMatrice(CASE matrice[L][C]) {
     return matstr;
 }
 
-char *getSize(){//C et L paramettre de serveur
+char *getSize(){
 	printf("La commande est en cours d'éxecution \n");
 	char *size;
 	size = (char*)calloc(20, sizeof(char));
