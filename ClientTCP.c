@@ -189,7 +189,7 @@ int InterpretationMenu(char *input){
 	else if(strcmp(input,"5\0")==0){
 	
 		printf("Vous avez choisi le getWaitTime \n");
-		//strcpy(messageEnvoi,"/getSize");
+		strcpy(messageEnvoi,"/getWaitTime\n");
 		return 1;
 	}
 	else if(strcmp(input,"6\0")==0){
@@ -282,7 +282,22 @@ int Menu(){
 void InterpretationMessageBoucle(char *MessageRecu){
 
 	//printf("Interprétation en cours \n");
-	printf("Reponse du serveur : %s ",MessageRecu);
+	printf("Reponse du serveur :\n%s \n",MessageRecu);
+	printf("Affichage de la matrice : \n");
+	int compteur=0;
+	
+		//for(int j=0;j<strlen(MessageRecu);j++){
+		//printf("Dans boucle \n");
+		//	printf("%c",MessageRecu[j]);
+		//	compteur++;
+		//	if(compteur==84){
+			
+		//		printf("\n");
+		//		compteur=0;
+		//	}
+		//}
+	
+	
 }
 
 
