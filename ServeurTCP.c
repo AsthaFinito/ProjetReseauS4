@@ -7,12 +7,13 @@
 #include <netinet/in.h> /* pour struct sockaddr_in */
 #include <arpa/inet.h> /* pour htons et inet_aton */
 #include <poll.h>
+#include<time.h>
 
 
 
 
 #define PORT IPPORT_USERRESERVED // = 5000
-#define LG_MESSAGE 500
+#define LG_MESSAGE 2000
 #define L 4
 #define C 8
 #define Max_Pixel 10
@@ -36,7 +37,7 @@ int b64invs[] = { 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58,
 
 
 typedef struct CASE{
-	char couleur[50]; //couleur format RRRGGGBBB
+	char couleur[25]; //couleur format RRRGGGBBB
 
 }CASE;
 
@@ -46,6 +47,7 @@ typedef struct Users {
   int data;
   int User_Connexion_fdp;
   struct Users* suivant;
+  int coup_restant;
 } Users;
 
 
@@ -64,6 +66,7 @@ void AjoutQueue(queue* q, int data) {
   Users* NouvelleUsers = (Users*)malloc(sizeof(Users));
   NouvelleUsers->data = data;
   NouvelleUsers->suivant = NULL;
+  NouvelleUsers->coup_restant = 1;
   if (q->first == NULL) {
     
     q->first = NouvelleUsers;
@@ -108,7 +111,7 @@ void MessageADecomposer(char Message[LG_MESSAGE]);
 char* GetSizeCommande(char MotAReturn[256]);
 char* GetLimitCommande(char MotAReturn[256]);
 void AfficheMatriceDeJeu(CASE Matrice[L][C]);
-char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]);
+char* ReturnMatriceDeJeu(CASE Matrice[L][C],char TestMatrice[2000]);
 void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char NewCouleur[10]);
 int DecoupeMessageSetPixel(char* MessageComplet);
 void TestDecoupageMessage();
@@ -155,10 +158,16 @@ void TestLancementServeur(int argc, char *argv[]){
     }
 
 }
+queue ListeUsersPoll;
+int sec_left;
+int actionUsers;
 
 int main(int argc, char *argv[])
 {
-
+	
+	
+		    
+		  // nombre de secondes restantes jusqu'à la prochaine minute
 	TestLancementServeur(argc,argv);
 	
 	int socketEcoute;
@@ -217,7 +226,7 @@ int main(int argc, char *argv[])
 	
 	//Initialisation du Poll avant la boucle while true
 	
-	queue ListeUsersPoll;
+	
 	InitialisationQueue(&ListeUsersPoll);
 	
 
@@ -244,6 +253,15 @@ int main(int argc, char *argv[])
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	while(1)
 	{
+	
+			time_t now = time(NULL); // obtenir l'heure actuelle en secondes depuis l'époque UNIX
+		 struct tm * timeinfo = localtime(&now); // convertir en structure tm contenant les informations de temps	
+		    sec_left = 60 - timeinfo->tm_sec;
+		    if(sec_left==1){
+		    	ListeUsersPoll.first->coup_restant=1;
+		    	
+		    }
+		   // printf("Il reste %d secondes avant la prochaine minute.\n", sec_left);
 		//printf("Dans le while \n"); //Partie init du poll
 		if(poll(ListeConnec,100,-1)==-1){
 			printf("Erreur Init du poll \n");
@@ -262,6 +280,7 @@ int main(int argc, char *argv[])
 			printf("%d\n",ntohs(pointDeRencontreDistant.sin_port));
 			int NewUser = accept(socketEcoute, (struct sockaddr*)&UsersArrive, &LongueurAddresseUser);
 			printf("Valeur du Newuser : %d \n",NewUser);
+			
 			AjoutQueue(&ListeUsersPoll,NewUser);
 			afficherListe(&ListeUsersPoll);
 			ListeConnec[POSITION_TABLEAU].fd=NewUser;
@@ -285,6 +304,7 @@ int main(int argc, char *argv[])
 			 
 			 if (ListeConnec[i].revents & POLLIN && ListeConnec[i].fd!=-1) {
 			 	printf("Action detectée pour i= %d \n",i);
+			 	actionUsers=i;
 			 	printf("Valeur de ListeConnec[i].fd : %d \n",ListeConnec[i].fd);
 			 	int DetectionAction = read(ListeConnec[i].fd, messageRecu, LG_MESSAGE * sizeof(char));
 			 	printf("Valeur de detectionAction : %d\n",DetectionAction);
@@ -297,7 +317,7 @@ int main(int argc, char *argv[])
 			 	}
 			 	else if(DetectionAction==0){
 			 		printf("Deconnexion d'un client \n");
-			 		close(ListeConnec[i].fd);
+			 		//close(ListeConnec[i].fd);
 			 		POSITION_TABLEAU--;
 			 	
 			 	}
@@ -312,13 +332,18 @@ int main(int argc, char *argv[])
 			 	printf("C'est quel cas? \n");
 			 	ListeConnec[i].events = POLLIN;
 			 	printf(" strlen(messageEnvoi) == %d \n",strlen(messageEnvoi));
-			 	int EcritureServeur = write(ListeConnec[i].fd, messageEnvoi, strlen(messageEnvoi)+100);
+			 	//printf("Voici la matrice avant L'ecriture serveur : \n");
+			 	//AfficheMatriceDeJeu(MatriceDeJeu);
+			 	printf("Affichage de messageEnvoi : \n");
+			 	printf("'%s'",messageEnvoi);
+			 	printf("\n");
+			 	int EcritureServeur = send(ListeConnec[i].fd, messageEnvoi, 385,0);
 			 	
 				switch (EcritureServeur) {
 				    case -1:
 				        printf("Cannot write : (Ecriture serveur = -1) \n");
 				       // close(ListeConnec[i].fd);
-				        
+				        perror("write");
 				        //exit(-6);
 				        
 				        break;
@@ -343,7 +368,7 @@ int main(int argc, char *argv[])
 	}
 
 	// On ferme la ressource avant de quitter
-	close(socketEcoute);
+	//close(socketEcoute);
 	return 0;
 }
 
@@ -452,12 +477,34 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 				strcpy(messageEnvoi,"12 Bad Color");
 			}
 			else{
-				printf("Avant modif de matrice \n");
-				printf("Valeur de ligne et de colonne : [%d] [%d] \n",Ligne,Colonne);
-				strcpy(MatriceDeJeu[Ligne][Colonne].couleur,CHAINE_ENCODE);
-				printf("Après modif de matrice \n");
-				strcpy(messageEnvoi,"00 OK");
-			
+				
+				Users *ParcourtDeLaQueue;
+				int compteur=1;
+				printf("Valeur de actionUser : %d \n",actionUsers);
+				
+				//on chercher qui a fait l'action
+				//on regarde si il a assez de pixel
+				//si oui on modifie le pixel
+				//si non on renvoie 20 outOfQuota
+				if(actionUsers==compteur){
+					printf("Debut le else \n");
+					
+					//Modifié le coup des pixel ici
+					printf("Avant modif de matrice \n");
+					printf("Valeur de ligne et de colonne : [%d] [%d] \n",Ligne,Colonne);
+					strcpy(MatriceDeJeu[Ligne][Colonne].couleur,CHAINE_ENCODE);
+					printf("Après modif de matrice \n");
+					strcpy(messageEnvoi,"00 OK");
+					
+				
+				}
+				
+				else{
+					
+					
+					
+				}
+				
 			}
 			
 		
@@ -468,6 +515,8 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 
 
 }
+
+
 size_t b64_encoded_size(size_t inlen)
 {
 	size_t ret;
@@ -700,10 +749,23 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 		printf("Commande ok /getMatrice \n");
 		 //strcpy(messageEnvoi,getMatrice(matrice, l*c));
 		 //AfficheMatriceDeJeu(MatriceDeJeu);
-		 ReturnMatriceDeJeu(MatriceDeJeu,TestMatrice);
+		// strcpy(TestMatrice,ReturnMatriceDeJeu(MatriceDeJeu,TestMatrice));
+		// printf("Sortie de Strcpy \n");
+		for (int i = 0; i < L; ++i)//parcours des lignes
+	{
+		printf("Modification en cours I=[%d] \n",i);
+		for (int j = 0; j < C; ++j)//parcours des colonnes 
+		{
+			printf("Modification en cours J=[%d] \n",j);
+			strcat(TestMatrice,MatriceDeJeu[i][j].couleur);
+			
+		}
 		
+	}
 		 strcpy(messageEnvoi,TestMatrice);
+		  printf("Sortie de Strcpy du messageEnvoi \n");
 		 printf(messageEnvoi);
+		 strcpy(TestMatrice,"");
 		 printf("Fin de /getMatrice \n");
 	
 	}
@@ -721,6 +783,10 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 	}
 	else if(strcmp(Message,"/getWaitTime\n")==0){
 		printf("Commande ok /getWaitTime \n");
+		char str[5];
+		sprintf(str, "%d", sec_left);
+		strcpy(messageEnvoi,str);
+		printf("Fin de copy getwaitTime\n");
 	
 	}
 	else if(strcmp(Message,"/setPixel\n")==0){
@@ -798,19 +864,23 @@ void AfficheMatriceDeJeu(CASE Matrice[L][C]){
 
 }
 
-char* ReturnMatriceDeJeu(CASE Matrice[L][C],char MotAReturn[2000]){
+char* ReturnMatriceDeJeu(CASE Matrice[L][C],char TestMatrice[2000]){
 
+
+	char TestMatrice2[2000];
 	for (int i = 0; i < L; ++i)//parcours des lignes
 	{
+		printf("Modification en cours I=[%d] \n",i);
 		for (int j = 0; j < C; ++j)//parcours des colonnes 
 		{
-			
-			strcat(MotAReturn,Matrice[i][j].couleur);
+			printf("Modification en cours J=[%d] \n",j);
+			strcat(TestMatrice,Matrice[i][j].couleur);
 			
 		}
 		
 	}
-	return MotAReturn;
+	printf("Fin de strcat pour renvoiyer la matrice \n");
+	return TestMatrice;
 
 }
 
