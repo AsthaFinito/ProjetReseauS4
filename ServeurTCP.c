@@ -20,6 +20,7 @@
 #define VERSION 1.5
 
 int POSITION_TABLEAU = 1;
+int tableau_coup_Restant[10]={1,1,1,1,1,1,1,1,1,1};
 char messageEnvoi[2000];/* le message de la couche Application ! */
 char TableauDecoupage[3][500];
 char TableauDecoupagePosition[2][10];
@@ -54,16 +55,20 @@ typedef struct Users {
 
 typedef struct queue {
   Users* first;
-  Users* suivant;
+  
 } queue;
 
 void InitialisationQueue(queue* q) {
   q->first = NULL;
-  q->suivant = NULL;
+
 }
 
 void AjoutQueue(queue* q, int data,int coup_restant) {
   Users* NouvelleUsers = (Users*)malloc(sizeof(Users));
+  if (NouvelleUsers == NULL) {
+        printf("Erreur: Impossible d'allouer de la mémoire.\n");
+        return NULL;
+    }
   NouvelleUsers->data = data;
   NouvelleUsers->suivant = NULL;
   NouvelleUsers->coup_restant = coup_restant;
@@ -251,7 +256,7 @@ int main(int argc, char *argv[])
 	
 	initMatrice(MatriceDeJeu);
 	// boucle d’attente de connexion : en théorie, un serveur attend indéfiniment !
-	
+	Users* test=ListeUsersPoll.first;
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	while(1)
 	{
@@ -266,8 +271,10 @@ int main(int argc, char *argv[])
 		    	
 		    }
 		    if(statut==1){
-		    	ListeUsersPoll.first->coup_restant=1;
-		    	statut=0;
+		    	for(int i=0;i<10;i++){
+		    	
+		    		tableau_coup_Restant[i]=1;
+		    	}
 		    }
 		   // printf("Il reste %d secondes avant la prochaine minute.\n", sec_left);
 		//printf("Dans le while \n"); //Partie init du poll
@@ -291,6 +298,8 @@ int main(int argc, char *argv[])
 			
 			AjoutQueue(&ListeUsersPoll,NewUser,1);
 			afficherListe(&ListeUsersPoll);
+			//AfficheStatUser(test);
+			
 			ListeConnec[POSITION_TABLEAU].fd=NewUser;
 			POSITION_TABLEAU++;
 			printf("Nouveau joueur accepté \n");
@@ -337,7 +346,7 @@ int main(int argc, char *argv[])
 			 	}
 			 }
 			 else  if (ListeConnec[i].fd!=-1 && ListeConnec[i].revents & POLLOUT) {
-			 	printf("C'est quel cas? \n");
+			 	//printf("C'est quel cas? \n");
 			 	ListeConnec[i].events = POLLIN;
 			 	printf(" strlen(messageEnvoi) == %d \n",strlen(messageEnvoi));
 			 	//printf("Voici la matrice avant L'ecriture serveur : \n");
@@ -448,6 +457,8 @@ int TestChiffreDansBits(char* IN){
 
 void AfficheStatUser(Users *User){
 	printf("Affichage des stats de l'user : \n");
+	printf("%d -> data \n",User->data);
+	
 	printf("%d -> coup restant \n",User->coup_restant);
 	if(User->suivant==NULL){
 		printf("Pas de suivant à l'user \n");
@@ -523,8 +534,8 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 				
 					printf("All good \n");
 				}
-				AfficheStatUser(ParcourtDeLaQueue);
-				if(ParcourtDeLaQueue->coup_restant==0){
+				//AfficheStatUser(ParcourtDeLaQueue);
+				if(tableau_coup_Restant[actionUsers]==0){
 					printf("Impossible de poser le pixel \n");
 					strcpy(messageEnvoi,"20 OutOfQuota");
 				}
@@ -534,7 +545,8 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 					strcpy(MatriceDeJeu[Ligne][Colonne].couleur,CHAINE_ENCODE);
 					printf("Après modif de matrice \n");
 					strcpy(messageEnvoi,"00 OK");
-					ParcourtDeLaQueue->coup_restant=ParcourtDeLaQueue->coup_restant-1;
+					//ParcourtDeLaQueue->coup_restant=ParcourtDeLaQueue->coup_restant-1;
+					tableau_coup_Restant[actionUsers]=0;
 					
 				}
 				//on regarde si il a assez de pixel
