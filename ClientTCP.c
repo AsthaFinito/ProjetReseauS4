@@ -175,19 +175,19 @@ int InterpretationMenu(char *input){
 	printf("Lettre reçu dans l'interpretation : [%s] \n",input);
 	if(strcmp(input,"1\0")==0){
 		printf("Vous avez choisi le getSize \n");
-		strcpy(messageEnvoi,"/getSize\n");
+		strcpy(messageEnvoi,"/getSize\0");
 		return 1;
 	}
 	else if(strcmp(input,"2\0")==0){
 	
 		printf("Vous avez choisi le getLimits \n");
-		strcpy(messageEnvoi,"/getLimits\n");
+		strcpy(messageEnvoi,"/getLimits\0");
 		return 1;
 	}
 	else if(strcmp(input,"3\0")==0){
 	
 		printf("Vous avez choisi le getMatrice \n");
-		strcpy(messageEnvoi,"/getMatrice\n");
+		strcpy(messageEnvoi,"/getMatrice\0");
 		return 1;
 	}
 	else if(strcmp(input,"4\0")==0){
@@ -200,20 +200,20 @@ int InterpretationMenu(char *input){
 	else if(strcmp(input,"5\0")==0){
 	
 		printf("Vous avez choisi le getWaitTime \n");
-		strcpy(messageEnvoi,"/getWaitTime\n");
+		strcpy(messageEnvoi,"/getWaitTime\0");
 		return 1;
 	}
 	else if(strcmp(input,"6\0")==0){
 	
 		printf("Vous avez choisi le getWaitTime \n");
-		strcpy(messageEnvoi,"/getVersion\n");
+		strcpy(messageEnvoi,"/getVersion\0");
 		return 1;
 	}
 	else{
 		printf("Erreur dans le choix d'action \n");
 		return 0;
 	}
-
+	printf("Envoie au serveur : [%s]\n",messageEnvoi);
 
 }
 
@@ -306,11 +306,11 @@ void CasSetPixel(){
    	  //printf("Voici la reconstitution : [%s] \n",reconstitution);
    	// printf("Valeur de la couleur encodé : [%s] \n",input);
    	 strcat(RenvoieSetPixel,reconstitution);
-   	 strcat(RenvoieSetPixel,"\n");
+   	// strcat(RenvoieSetPixel,"\n");
    	 strcpy(messageEnvoi,RenvoieSetPixel);
    	 //strcpy(messageEnvoi,"");
    	  strcpy(RenvoieSetPixel,"");
-   	// printf("Envoie au serveur : [%s]\n",RenvoieSetPixel);
+   	 printf("Envoie au serveur : [%s]\n",messageEnvoi);
 	
 }
 
