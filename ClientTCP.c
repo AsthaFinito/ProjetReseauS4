@@ -17,18 +17,18 @@ char messageRecu[LG_MESSAGE];/* le message de la couche Application ! */
 char base46_map[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
                      'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
                      'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
+                     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}; //tableau base64
 const char* base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
 
 void TestLancementClient(int argc, char *argv[]);
 void InterpretationMessageBoucle(char *MessageRecu);
-char* base64_encode(char* bits);
+
 int Menu();
 int InterpretationMenu(char *input);
 void CasSetPixel();
-void print_bits(int n);
+
 char* int_to_binary_string(int n);
 
 void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3);
@@ -144,6 +144,17 @@ int main(int argc, char *argv[]){
 
 }
 
+/* void TestLancementClient(int argc, char *argv[])
+
+params : int argc
+	 char *argv[]
+	 
+
+Return :void
+
+But : Fonction de test pour lancer le client
+*/
+
 void TestLancementClient(int argc, char *argv[]){
 
 	
@@ -171,6 +182,16 @@ void TestLancementClient(int argc, char *argv[]){
 
 
 }
+/* int InterpretationMenu(char *input)
+
+params : char *input -> touche choisi par le client
+	 
+
+Return :int -> valeur de test pour le cas ou aucune commande tapée
+
+But : Verification de la touche + appels des bonnes fonctions
+*/
+
 int InterpretationMenu(char *input){
 	printf("Lettre reçu dans l'interpretation : [%s] \n",input);
 	if(strcmp(input,"1\0")==0){
@@ -213,10 +234,22 @@ int InterpretationMenu(char *input){
 		printf("Erreur dans le choix d'action \n");
 		return 0;
 	}
-	printf("Envoie au serveur : [%s]\n",messageEnvoi);
+	//printf("Envoie au serveur : [%s]\n",messageEnvoi);
 
 }
 
+/* void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3) 
+
+params : char* input_str -> char* contenant plusieurs informations
+	 char* output_str_1 -> valeur de retour1
+	 char* output_str_2 -> valeur de retour2
+	 char* output_str_3 -> valeur de retour3
+	 
+
+Return :void 
+
+But : Découper une chaine de caractères en 3 parties égales
+*/
 void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3) {
     int len = strlen(input_str);
     int part_len = len / 3;
@@ -225,6 +258,19 @@ void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char*
     strncpy(output_str_3, input_str + 2 * part_len, part_len);
    // printf("Valeur des merdes : [%s] [%s] [%s] \n",output_str_1,output_str_2,output_str_3);
 }
+/* void SplitCharEn4(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3, char* output_str_4) 
+
+params : char* input_str -> char* contenant plusieurs informations
+	 char* output_str_1 -> valeur de retour1
+	 char* output_str_2 -> valeur de retour2
+	 char* output_str_3 -> valeur de retour3
+	 char* output_str_4 -> valeur de retour4
+	 
+
+Return :void 
+
+But : Découper une chaine de caractères en 4 parties égales
+*/
 
 void SplitCharEn4(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3, char* output_str_4) {
     int len = strlen(input_str);
@@ -242,7 +288,15 @@ void SplitCharEn4(char* input_str, char* output_str_1, char* output_str_2, char*
 }
 
 
+/* void CasSetPixel()
 
+params : 
+	 
+
+Return :void 
+
+But : Gestion spécial pour le cas ou le client choisi /setPixel LxC RGB
+*/
 void CasSetPixel(){
 
 
@@ -257,7 +311,7 @@ void CasSetPixel(){
 	char reconstitution[20];
 	fgets(input, 50, stdin); 
 	int pos = strchr(input, '\n') - input;
-    	if (pos >= 0 && pos < strlen(input)) {
+    	if (pos >= 0 && pos < strlen(input)) { // Découpage de la commande en plusieurs partie (ici coo)
     	
         	input[pos] = '\0';
         	//printf(" backslashN enlevé à %d\n",pos);
@@ -267,7 +321,7 @@ void CasSetPixel(){
    	 printf("Veuillez rentrer une couleur->  \n");
    	 fgets(input, 50, stdin); 
    	 pos= strchr(input, '\n') - input;
-   	 if (pos >= 0 && pos < strlen(input)) {
+   	 if (pos >= 0 && pos < strlen(input)) {// Découpage de la commande en plusieurs partie (ici couleur)
     	
         	input[pos] = '\0';
         	//printf(" backslashN enlevé à %d\n",pos);
@@ -276,7 +330,7 @@ void CasSetPixel(){
    	 SplitCharEn3(input,test1,test2,test3);
    	 
    	 strcpy(test1,int_to_binary_string(atoi(test1)));
-   	 strcpy(test2,int_to_binary_string(atoi(test2)));
+   	 strcpy(test2,int_to_binary_string(atoi(test2))); // On convertit en bin pour faire la conversion ensuite vers le base64
    	 strcpy(test3,int_to_binary_string(atoi(test3)));
    	 strcpy(input,"");
    	 
@@ -289,7 +343,7 @@ void CasSetPixel(){
    	 strcpy(test3,"");
    	 //strcpy(test4,"");
    	 SplitCharEn4(input,test1,test2,test3,test4);
-   	// strcpy(input,base64_encode(input));
+   	
    	 char V1=TransformeBinaire(test1);
    	// printf("V1 = [%c] \n",V1);
    	 reconstitution[0]=V1;
@@ -302,18 +356,29 @@ void CasSetPixel(){
    	 V1=TransformeBinaire(test4);
    	 // printf("V1 = [%c] \n",V1);
    	  reconstitution[3]=V1;
-   	  reconstitution[4]='\0';
+   	  reconstitution[4]='\0'; //Une fois les étapes préliminaires faites, on reconstitute la commande
    	  //printf("Voici la reconstitution : [%s] \n",reconstitution);
    	// printf("Valeur de la couleur encodé : [%s] \n",input);
    	 strcat(RenvoieSetPixel,reconstitution);
    	// strcat(RenvoieSetPixel,"\n");
-   	 strcpy(messageEnvoi,RenvoieSetPixel);
+   	 strcpy(messageEnvoi,RenvoieSetPixel); //on envoie au serveur
    	 //strcpy(messageEnvoi,"");
    	  strcpy(RenvoieSetPixel,"");
    	 printf("Envoie au serveur : [%s]\n",messageEnvoi);
 	
 }
 
+
+
+/* int Menu()
+
+params : 
+	 
+
+Return :void 
+
+But : Affichage d'un menu pour choisir les options
+*/
 int Menu(){
 
 	char test[30];
@@ -326,7 +391,7 @@ int Menu(){
 	printf("	5 - getWaitTime \n");
 	printf("	6 - getVersion \n");
 	printf("	7 - TestConversion base64 \n");
-	//print_bits(255);
+	
 	//strcpy(test,int_to_binary_string(255));
 	//printf("Version s : [%s] \n",test);
 	char input[10];
@@ -357,6 +422,15 @@ int Menu(){
 
 }
 
+/* void InterpretationMessageBoucle(char *MessageRecu)
+
+params : char *MessageRecu -> Message Recu du serveur
+	 
+
+Return :void 
+
+But : Affichage de la réponse du serveur
+*/
 void InterpretationMessageBoucle(char *MessageRecu){
 
 	//printf("Interprétation en cours \n");
@@ -379,61 +453,18 @@ void InterpretationMessageBoucle(char *MessageRecu){
 }
 
 
-char* base64_encode(char* bits) {
-
-     size_t bits_len = strlen(bits);
-    size_t base64_len = ((bits_len + 2) / 3) * 4 + 1;
-    char* base64 = malloc(base64_len);
-
-    size_t i = 0;
-    size_t j = 0;
-    uint32_t buffer = 0;
-    uint8_t bits_in_buffer = 0;
-
-    for (i = 0; i < bits_len; i++) {
-        buffer <<= 1;
-        buffer |= bits[i] - '0';
-        bits_in_buffer++;
-
-        if (bits_in_buffer == 6) {
-            base64[j++] = base64_chars[(buffer >> 18) & 0x3F];
-            base64[j++] = base64_chars[(buffer >> 12) & 0x3F];
-            base64[j++] = base64_chars[(buffer >> 6) & 0x3F];
-            base64[j++] = base64_chars[buffer & 0x3F];
-            buffer = 0;
-            bits_in_buffer = 0;
-        }
-    }
-
-    if (bits_in_buffer == 2) {
-        buffer <<= 4;
-        base64[j++] = base64_chars[(buffer >> 6) & 0x3F];
-        base64[j++] = base64_chars[buffer & 0x3F];
-        base64[j++] = '=';
-        base64[j++] = '=';
-    } else if (bits_in_buffer == 4) {
-        buffer <<= 2;
-        base64[j++] = base64_chars[(buffer >> 12) & 0x3F];
-        base64[j++] = base64_chars[(buffer >> 6) & 0x3F];
-        base64[j++] = base64_chars[buffer & 0x3F];
-        base64[j++] = '=';
-    }
-
-    base64[j] = '\0';
-
-    return base64;
-}
 
 
 
-void print_bits(int n) {
-    int i;
-    for (i = 7; i >= 0; i--) {
-        int bit = (n >> i) & 1;
-        //printf("%d", bit);
-    }
-   // printf("\n");
-}
+/* char* int_to_binary_string(int n)
+
+params : int n -> entier a convertir en bits
+	 
+
+Return :char* le bianire en char* 
+
+But : Convertit un int en binaire de taille 8 au minimum
+*/
 
 char* int_to_binary_string(int n) {
     // Calculer le nombre de bits nécessaires pour représenter l'entier en binaire
@@ -463,6 +494,16 @@ char* int_to_binary_string(int n) {
     return binary_str;
 }
 
+
+/* char TransformeBinaire(char* input)
+
+params : char* input -> un chiffre binaire representé par un char*
+	 
+
+Return :char le caractère en base64 du binaire
+
+But : Convertir en base64 un binaire (6bits normalement)
+*/
 char TransformeBinaire(char* input){
 	unsigned int valeur=0;
 	for(int i=0;i<strlen(input);i++){
