@@ -274,6 +274,7 @@ int main(int argc, char *argv[])
 		 struct tm * timeinfo = localtime(&now); // convertir en structure tm contenant les informations de temps	
 		    sec_left = 60 - timeinfo->tm_sec;
 		    statut=0;
+		   // printf("Seconde restantes : %d \n",sec_left);
 		    if(sec_left==1){
 		    	statut=1;
 		    	
@@ -285,7 +286,7 @@ int main(int argc, char *argv[])
 		    		tableau_coup_Restant[i]=1;
 		    	}
 		    }
-		   // printf("Il reste %d secondes avant la prochaine minute.\n", sec_left);
+		   printf("Il reste %d secondes avant la prochaine minute.\n", sec_left);
 		//printf("Dans le while \n"); //Partie init du poll
 		if(poll(ListeConnec,10,-1)==-1){
 			printf("Erreur Init du poll \n");
@@ -483,6 +484,7 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 	printf("La couleur est : %s \n",MessageColor);
 	int valeur_Bin=0;
 	char CHAINE_ENCODE[40];
+	char CHAINE_MATRICE[40];
 	char CHAINE_DECODE[40];
 	char test;
 	char test2;
@@ -500,6 +502,7 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 			
 			//strcpy(CHAINE_ENCODE,base64_encode(MessageColor)); 
 			strcpy(CHAINE_ENCODE,MessageColor);// encode en base64 
+			strcpy(CHAINE_MATRICE,MessageColor);
 			//unsigned int SIZE_OF_ENCODE=b64_encoded_size(strlen(CHAINE_ENCODE));
 			printf(" [%s] encoded \n",CHAINE_ENCODE); //j'affiche
 			//printf("Valeur de b64_encoded_size : %d \n",SIZE_OF_ENCODE);
@@ -568,7 +571,7 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 				else{
 					printf("Coup possible \n");
 					printf("Valeur de ligne et de colonne : [%d] [%d] \n",Ligne,Colonne);
-					strcpy(MatriceDeJeu[Ligne][Colonne].couleur,CHAINE_ENCODE);
+					strcpy(MatriceDeJeu[Ligne][Colonne].couleur,CHAINE_MATRICE);
 					printf("Après modif de matrice \n");
 					strcpy(messageEnvoi,"00 OK");
 					//ParcourtDeLaQueue->coup_restant=ParcourtDeLaQueue->coup_restant-1;
@@ -1001,7 +1004,7 @@ void initMatrice(CASE matrice[L][C]){
 	{
 		for (int j = 0; j < C; ++j)//parcours des colonnes 
 		{
-			strcpy(matrice[i][j].couleur,"MjU1MjU1MjU1");
+			strcpy(matrice[i][j].couleur,"////");
 		}
 	}
 }
