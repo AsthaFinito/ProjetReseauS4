@@ -30,7 +30,7 @@ char TableauDecoupagePosition[2][10];
 char base46_map[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
                      'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
                      'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
+                     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'}; // Base64 transformer
                      
 int b64invs[] = { 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58,
 	59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5,
@@ -42,14 +42,14 @@ int b64invs[] = { 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58,
 	const char* base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
-typedef struct CASE{
-	char couleur[25]; //couleur format RRRGGGBBB
+typedef struct CASE{ //Structure présente dans la matrice
+	char couleur[25]; 
 
 }CASE;
 
-CASE MatriceDeJeu[L][C];
+CASE MatriceDeJeu[L][C]; //Matrice avec les pixels
 
-typedef struct Users {
+typedef struct Users {  //Structure des "clients"
   int data;
   int User_Connexion_fdp;
   struct Users* suivant;
@@ -58,11 +58,13 @@ typedef struct Users {
 
 
 
-typedef struct queue {
+typedef struct queue { //Liste chainée
   Users* first;
   
 } queue;
 
+
+/* Fonctions pour gerer la liste chainée */
 void InitialisationQueue(queue* q) {
   q->first = NULL;
 
@@ -107,14 +109,14 @@ void afficherListe(queue *liste)
     printf("\n");
 }
 
-
+/* Fonctions pour gerer la liste chainée */
 
 
 
 void initMatrice(CASE matrice[L][C]);
 void setPixel(CASE matrice[L][C], int posL, int posC, char val[10]);
-char *getMatrice(CASE matrice[L][C]);
-char *getSize();
+
+
 
 
 void MessageADecomposer(char Message[LG_MESSAGE]);
@@ -128,15 +130,14 @@ void TestDecoupageMessage();
 void TestPixelOutOfBound(char MessagePixel[20],char MessagePixel2[20]);
 void TestBadColor(char MessageColor[20],int Ligne,int Colonne);
 
-char base64_to_ascii(char base64);
-char* base64_to_bits(char* cipher);
-size_t b64_decoded_size(const char *in);
-char* base64_encode(char* plain);
-int b64_decode(const char *in, unsigned char *out, size_t outlen);
-int b64_isvalidchar(char c);
-size_t b64_encoded_size(size_t inlen);
+
+
+
+
+
+
 int TestChiffreDansBits(char* IN);
-void AfficheStatUser(Users *User);
+
 int char_in_array(char c, const char* array);
 void ConvertirB64ToBin(char* input);
 void int_to_binary(unsigned int n, char* binary);
@@ -145,7 +146,7 @@ int TransformeBinaire(char* input);
 int testValeurRGB(int test);
 
 
-void TestLancementServeur(int argc, char *argv[]){
+void TestLancementServeur(int argc, char *argv[]){ //Fonction de test pour lancer le serveur avec des arguments
 
 	
 	 int opt;
@@ -185,7 +186,7 @@ int main(int argc, char *argv[])
 	
 	
 		    
-		  // nombre de secondes restantes jusqu'à la prochaine minute
+	/*Lancement du serveur*/
 	TestLancementServeur(argc,argv);
 	
 	int socketEcoute;
@@ -251,7 +252,7 @@ int main(int argc, char *argv[])
 	
 	
 	struct pollfd ListeConnec[10];
-	memset(ListeConnec, 0, sizeof(ListeConnec));
+	memset(ListeConnec, 0, sizeof(ListeConnec)); // On crée le tableau d'users
     	ListeConnec[0].fd = socketEcoute;
     	ListeConnec[0].events = POLLIN;
     	for(int i =0;i<10;i++){ //On doit syncroniser le tableau et la liste chainé donc le tableau commence à 1 et l'autre 0
@@ -287,7 +288,7 @@ int main(int argc, char *argv[])
 		    if(statut==1){
 		    	for(int i=0;i<10;i++){
 		    	
-		    		tableau_coup_Restant[i]=1;
+		    		tableau_coup_Restant[i]=1; //Remise à zéro des coups restants pour chaque minutes
 		    	}
 		    }	
 		//printf("Dans le while \n"); //Partie init du poll
@@ -403,6 +404,15 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+/* int DecoupeMessageSetPixel(char* MessageComplet)
+
+params : Char* MessageComplet -> la chaine de caractère à découper
+
+Return : int -> valeur de test 
+
+But : Découpe le message dans le cas du setPixel pour mieux gerer les différents paramètres
+*/
+
 int DecoupeMessageSetPixel(char* MessageComplet){
 
 	char Decoupage[2]=" ";
@@ -416,7 +426,7 @@ int DecoupeMessageSetPixel(char* MessageComplet){
 		
 		if(compteur>=3){
 		
-			printf("Erreur pour le /setPixel (trop d'argument ) \n");
+			printf("Erreur pour le /setPixel (trop d'argument ) \n"); //2 paramètres max
 			strcpy(messageEnvoi,"10 Bad Command");
 			token=NULL;
 			return -1;
@@ -448,6 +458,15 @@ int DecoupeMessageSetPixel(char* MessageComplet){
 	return 1;
 	
 }
+/* int TestChiffreDansBits(char* IN)
+
+params : Char* MessageComplet -> la chaine de caractère représentant un bit
+
+Return : int -> valeur de test 
+
+But : Fonction de debug utile pour tester le décodage base64
+*/
+
 int TestChiffreDansBits(char* IN){
 
 	for(int i=0;i<9;i++){
@@ -470,18 +489,15 @@ int TestChiffreDansBits(char* IN){
 	return 0;
 }
 
-void AfficheStatUser(Users *User){
-	printf("Affichage des stats de l'user : \n");
-	printf("%d -> data \n",User->data);
-	
-	printf("%d -> coup restant \n",User->coup_restant);
-	if(User->suivant==NULL){
-		printf("Pas de suivant à l'user \n");
-	}else{
-	
-		printf("Un autre user suit \n");
-	}
-}
+/* void TestBadColor(char MessageColor[20],int Ligne,int Colonne)
+
+params : char MessageColor[20] -> La partie du string contenant l'information de la couleur
+	 int Ligne,int Colonne -> les coordonées en int de la place du pixel
+
+Return : void
+
+But : Fonction de Test pour la couleur (case 12 BadColor)
+*/
 
 void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 
@@ -500,24 +516,21 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 	
 	
 	
-		printf("Test en cours \n");
+		
 		
 		
 			
-			//strcpy(CHAINE_ENCODE,base64_encode(MessageColor)); 
+			
 			strcpy(CHAINE_ENCODE,MessageColor);// encode en base64 
 			strcpy(CHAINE_MATRICE,MessageColor);
-			//unsigned int SIZE_OF_ENCODE=b64_encoded_size(strlen(CHAINE_ENCODE));
+			
 			printf(" [%s] encoded \n",CHAINE_ENCODE); //j'affiche
-			//printf("Valeur de b64_encoded_size : %d \n",SIZE_OF_ENCODE);
-			//test=base64_to_ascii(test2);
-			//strcpy(NEWSTR,base64_to_bits(NEWSTR2)); //conversion bits 
-			//int test_valeur=b64_decode(CHAINE_ENCODE,CHAINE_DECODE,10);
-			ConvertirB64ToBin(CHAINE_ENCODE);
-			SplitCharEn3(CHAINE_ENCODE,test12,test22,test32);
+		
+			ConvertirB64ToBin(CHAINE_ENCODE); //On convertit en binaire
+			SplitCharEn3(CHAINE_ENCODE,test12,test22,test32);//On découpe la char* en 3 parties pour récuperer les 3*8 bits
 			printf("Valeur des merdes : [%s] [%s] [%s] \n",test12,test22,test32);
 			
-			int valeur_Bin1 = TransformeBinaire(test12);
+			int valeur_Bin1 = TransformeBinaire(test12); //Conversion en int pour tester chaque valeur
 			printf("Valeur_bin1= [%d] \n",valeur_Bin1);
 			int test_chiffre1=testValeurRGB(valeur_Bin1);
 			int valeur_Bin2 = TransformeBinaire(test22);
@@ -526,16 +539,9 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 			int valeur_Bin3 = TransformeBinaire(test32);
 			printf("Valeur_bin3= [%d] \n",valeur_Bin3);
 			int test_chiffre3=testValeurRGB(valeur_Bin3);
-			//printf("Chaine décode ? [%c] \n",test);
-			//printf("Chaine décode2 ? [%s] \n",NEWSTR);
-			//printf("Chaine décode2 ? [%02x] \n",CHAINE_DECODE);
-			//printf("Chaine décode2 en s ? [%s] \n",CHAINE_DECODE);
-			//unsigned int test_size=b64_decoded_size(NEWSTR);
-			//unsigned int test_size=b64_decoded_size(CHAINE_DECODE);
-			//printf("Valeur de b64_decoded_size : %d \n",test_size);
-			//int test_chiffre=TestChiffreDansBits(CHAINE_DECODE);
+			
 		
-			if(test_chiffre1==-1 || test_chiffre2==-1 || test_chiffre3==-1){
+			if(test_chiffre1==-1 || test_chiffre2==-1 || test_chiffre3==-1){ //Cas ou un des test n'est pas concluants
 			
 				strcpy(messageEnvoi,"12 Bad Color");
 			}
@@ -545,7 +551,7 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 				int compteur=1;
 				printf("Valeur de actionUser : %d \n",actionUsers);
 				
-				//on chercher qui a fait l'action
+				//on cherche qui a fait l'action
 				
 				if(actionUsers==compteur){
 					printf("C'est le premier client qui a fait l'action \n");
@@ -575,11 +581,11 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 				else{
 					printf("Coup possible \n");
 					printf("Valeur de ligne et de colonne : [%d] [%d] \n",Ligne,Colonne);
-					strcpy(MatriceDeJeu[Ligne][Colonne].couleur,CHAINE_MATRICE);
+					strcpy(MatriceDeJeu[Ligne][Colonne].couleur,CHAINE_MATRICE);//Modification de la matrice en fonction des params
 					printf("Après modif de matrice \n");
 					strcpy(messageEnvoi,"00 OK");
 					//ParcourtDeLaQueue->coup_restant=ParcourtDeLaQueue->coup_restant-1;
-					tableau_coup_Restant[actionUsers]=0;
+					tableau_coup_Restant[actionUsers]=0;//Modification des coups
 					
 				}
 				//on regarde si il a assez de pixel
@@ -598,6 +604,16 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 
 }
 
+/* int testValeurRGB(int test)
+
+params : int test -> valeur du binaire décodé précedemment
+
+Return :int -> valeur de test
+
+But : Vérifie que le int est bien compris entre 0 et 255
+*/
+
+
 int testValeurRGB(int test){
 
 	if(test<0 || test>255){
@@ -610,6 +626,14 @@ int testValeurRGB(int test){
 	}
 }
 
+/* int TransformeBinaire(char* input)
+
+params : char* input -> string représentant un bit
+
+Return :int -> valeur en int du char*
+
+But : Parcourt le bit du poids le plus fort au poids le plus faible pour connaitre sa valeur
+*/
 int TransformeBinaire(char* input){
 	unsigned int valeur=0;
 	for(int i=0;i<strlen(input);i++){
@@ -621,6 +645,16 @@ int TransformeBinaire(char* input){
 	printf("Valeur : [%d] \n",valeur);
 	return valeur;
 }
+
+/* int char_in_array(char c, const char* array) 
+
+params : char c -> carractère a tester
+	 const char* array -> tout les caractères de test possible
+
+Return :int -> valeur en int d'un index
+
+But : Trouver la position d'un char base64 dans son tableau pour connaitre sa valeur en int
+*/
 
 int char_in_array(char c, const char* array) {
     size_t len = strlen(array);
@@ -635,6 +669,16 @@ int char_in_array(char c, const char* array) {
     }
     return -1;
 }
+/* void ConvertirB64ToBin(char* input)
+
+params : char* input -> char* en base64 à convertir
+	 
+
+Return :void 
+
+But : convertir une chaine de carac base64 en binaire
+*/
+
 
 void ConvertirB64ToBin(char* input){
 	int index=0;
@@ -661,7 +705,18 @@ void ConvertirB64ToBin(char* input){
 	strcpy(input,reconstitution);
 }
 
+/* void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3) 
 
+params : char* input_str -> char* contenant plusieurs informations
+	 char* output_str_1 -> valeur de retour1
+	 char* output_str_2 -> valeur de retour2
+	 char* output_str_3 -> valeur de retour3
+	 
+
+Return :void 
+
+But : Découper une chaine de caractères en 3 parties égales
+*/
 void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3) {
     int len = strlen(input_str);
     int part_len = len / 3;
@@ -670,6 +725,18 @@ void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char*
     strncpy(output_str_3, input_str + 2 * part_len, part_len);
     printf("Valeur des merdes : [%s] [%s] [%s] \n",output_str_1,output_str_2,output_str_3);
 }
+
+/* void int_to_binary(unsigned int n, char* binary) 
+
+params : char* input_str -> char* valeur de retour en binaire
+	 unsigned int n -> valeur en int d'un char base64
+	
+	 
+
+Return :void 
+
+But : Convertir un int en binaire (char*)
+*/
 
 void int_to_binary(unsigned int n, char* binary) {
     int i;
@@ -680,163 +747,24 @@ void int_to_binary(unsigned int n, char* binary) {
     binary[6] = '\0';
 }
 
-size_t b64_encoded_size(size_t inlen)
-{
-	size_t ret;
 
-	ret = inlen;
-	if (inlen % 3 != 0)
-		ret += 3 - (inlen % 3);
-	ret /= 3;
-	ret *= 4;
 
-	return ret;
-}
-int b64_decode(const char *in, unsigned char *out, size_t outlen)
-{
-	size_t len;
-	size_t i;
-	size_t j;
-	int    v;
 
-	if (in == NULL || out == NULL)
-		return 0;
 
-	len = strlen(in);
-	if (outlen < b64_decoded_size(in) || len % 4 != 0)
-		return 0;
 
-	for (i=0; i<len; i++) {
-		if (!b64_isvalidchar(in[i])) {
-			return 0;
-		}
-	}
 
-	for (i=0, j=0; i<len; i+=4, j+=3) {
-		v = b64invs[in[i]-43];
-		v = (v << 6) | b64invs[in[i+1]-43];
-		v = in[i+2]=='=' ? v << 6 : (v << 6) | b64invs[in[i+2]-43];
-		v = in[i+3]=='=' ? v << 6 : (v << 6) | b64invs[in[i+3]-43];
 
-		out[j] = (v >> 16) & 0xFF;
-		if (in[i+2] != '=')
-			out[j+1] = (v >> 8) & 0xFF;
-		if (in[i+3] != '=')
-			out[j+2] = v & 0xFF;
-	}
+/* void TestPixelOutOfBound(char MessagePixel[20],char MessagePixel2[20])
 
-	return 1;
-}
-int b64_isvalidchar(char c)
-{
-	if (c >= '0' && c <= '9')
-		return 1;
-	if (c >= 'A' && c <= 'Z')
-		return 1;
-	if (c >= 'a' && c <= 'z')
-		return 1;
-	if (c == '+' || c == '/' || c == '=')
-		return 1;
-	return 0;
-}
-
-char* base64_encode(char* plain) {
-
-    char counts = 0;
-    char buffer[3];
-    char* cipher = malloc(strlen(plain) * 4 / 3 + 4);
-    int i = 0, c = 0;
-
-    for(i = 0; plain[i] != '\0'; i++) {
-        buffer[counts++] = plain[i];
-        if(counts == 3) {
-            cipher[c++] = base46_map[buffer[0] >> 2];
-            cipher[c++] = base46_map[((buffer[0] & 0x03) << 4) + (buffer[1] >> 4)];
-            cipher[c++] = base46_map[((buffer[1] & 0x0f) << 2) + (buffer[2] >> 6)];
-            cipher[c++] = base46_map[buffer[2] & 0x3f];
-            counts = 0;
-        }
-    }
-
-    if(counts > 0) {
-        cipher[c++] = base46_map[buffer[0] >> 2];
-        if(counts == 1) {
-            cipher[c++] = base46_map[(buffer[0] & 0x03) << 4];
-            cipher[c++] = '=';
-        } else {                      // if counts == 2
-            cipher[c++] = base46_map[((buffer[0] & 0x03) << 4) + (buffer[1] >> 4)];
-            cipher[c++] = base46_map[(buffer[1] & 0x0f) << 2];
-        }
-        cipher[c++] = '=';
-    }
-
-    cipher[c] = '\0';   /* string padding character */
-    return cipher;
-}
-
-size_t b64_decoded_size(const char *in)
-{
-	size_t len;
-	size_t ret;
-	size_t i;
-
-	if (in == NULL)
-		return 0;
-
-	len = strlen(in);
-	ret = len / 4 * 3;
-
-	for (i=len; i-->0; ) {
-		if (in[i] == '=') {
-			ret--;
-		} else {
-			break;
-		}
-	}
-
-	return ret;
-}
-
-char* base64_to_bits(char* cipher) {
-
-    char counts = 0;
-    char buffer[4];
-    char* plain = malloc(strlen(cipher) * 3 / 4);
-    int i = 0, p = 0;
-
-    for(i = 0; cipher[i] != '\0'; i++) {
-        char k;
-        for(k = 0 ; k < 64 && base46_map[k] != cipher[i]; k++);
-        buffer[counts++] = k;
-        if(counts == 4) {
-            plain[p++] = (buffer[0] << 2) + (buffer[1] >> 4);
-            if(buffer[2] != 64)
-                plain[p++] = (buffer[1] << 4) + (buffer[2] >> 2);
-            if(buffer[3] != 64)
-                plain[p++] = (buffer[2] << 6) + buffer[3];
-            counts = 0;
-        }
-    }
-
-    plain[p] = '\0';    /* string padding character */
-    return plain;
-}
-char base64_to_ascii(char base64) {
-	printf("Dans décode 1 carac \n");
-    char* table_base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    char* position = strchr(table_base64, base64);
-    int index = (int)(position - table_base64);
+params : char MessagePixel[20] -> Message contenant la position des coordonnées
+	 char MessagePixel2[20] -> char* valeur de retour 
 	
-    if (position == NULL) {
-        return '\0';
-    }
-	printf("Après le if \n");
-    unsigned char ascii = index;
-	printf("Après le ascii \n");
-    return (char)ascii;
-}
+	 
 
+Return :void 
 
+But : Tester les coordonées rentrées par le client
+*/
 
 
 void TestPixelOutOfBound(char MessagePixel[20],char MessagePixel2[20]){
@@ -876,6 +804,16 @@ void TestPixelOutOfBound(char MessagePixel[20],char MessagePixel2[20]){
 
 }
 
+/* void TestDecoupageMessage()
+
+params : 
+	
+	 
+
+Return :void 
+
+But : Découper le cas du setPixel en 2 partie pour mieux les tester
+*/
 void TestDecoupageMessage(){
 
 	char test1[20];
@@ -890,6 +828,17 @@ void TestDecoupageMessage(){
 	
 	
 }
+
+/* void MessageADecomposer(char Message[LG_MESSAGE])
+
+params : char Message[LG_MESSAGE] -> Message recu du client
+	
+	 
+
+Return :void 
+
+But : Interprétation du message du client
+*/
 
 void MessageADecomposer(char Message[LG_MESSAGE]){
 
@@ -954,7 +903,7 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 		printf("Fin de copy getwaitTime\n");
 	
 	}
-	else if(strcmp(Message,"/setPixel\n")==0){
+	else if(strcmp(Message,"/setPixel\n")==0){//debug
 		printf("Commande ok /setPixel \n");
 		SetPixelCommande(MatriceDeJeu,0,0,"100100100");
 		strcpy(messageEnvoi,"Pixel correctement modifié \n");
@@ -988,6 +937,17 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 }
 
 
+/* char* GetLimitCommande(char MotAReturn[256])
+
+params : char MotAReturn[256] -> Valeur de retour pour le client
+	
+	 
+
+Return :char* 
+
+But : Gestion du cas ou le client fait /getLimits
+*/
+
 char* GetLimitCommande(char MotAReturn[256]){
 
 	printf("Voici les limites du jeu PixelWar : \n");
@@ -1002,7 +962,16 @@ char* GetLimitCommande(char MotAReturn[256]){
 }
 
 
+/* void initMatrice(CASE matrice[L][C])
 
+params : CASE matrice[L][C] -> la matrice de jeu à init
+	
+	 
+
+Return :void
+
+But : Initialiser la matrice de jeu en 255255255 (base64)
+*/
 
 void initMatrice(CASE matrice[L][C]){
 
@@ -1015,7 +984,16 @@ void initMatrice(CASE matrice[L][C]){
 	}
 }
 
+/* void AfficheMatriceDeJeu(CASE Matrice[L][C])
 
+params : CASE matrice[L][C] -> la matrice de jeu 
+	
+	 
+
+Return :void
+
+But : Afficher la matrice de jeu
+*/
 void AfficheMatriceDeJeu(CASE Matrice[L][C]){
 
 	for (int i = 0; i < L; ++i)//parcours des lignes
@@ -1028,6 +1006,17 @@ void AfficheMatriceDeJeu(CASE Matrice[L][C]){
 	}
 
 }
+/* char* ReturnMatriceDeJeu(CASE Matrice[L][C],char TestMatrice[2000])
+
+params : CASE matrice[L][C] -> la matrice de jeu 
+	 char TestMatrice[2000]) -> valeur de retour
+	
+	 
+
+Return :char* la matrice de jeu
+
+But : Renvoyer la matrice de jeu quand le client fait /getMatrix
+*/
 
 char* ReturnMatriceDeJeu(CASE Matrice[L][C],char TestMatrice[2000]){
 
@@ -1048,6 +1037,19 @@ char* ReturnMatriceDeJeu(CASE Matrice[L][C],char TestMatrice[2000]){
 	return TestMatrice;
 
 }
+/* void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char NewCouleur[10])
+
+params : CASE matrice[L][C] -> la matrice de jeu 
+	 int ChoixLigne-> ligne choisi
+	  int ChoixColonne-> Colonne choisi
+	char NewCouleur[10] -> couleur choisi
+	 
+
+Return :char* la matrice de jeu
+
+But : Fonction de debug pour modifier la matrice
+*/
+
 
 void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char NewCouleur[10]){
 
@@ -1062,37 +1064,35 @@ void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char
 	}
 
 }
+/* void SetPixelCommande(CASE Matrice[L][C], int ChoixLigne, int ChoixColonne, char NewCouleur[10])
+
+params : CASE matrice[L][C] -> la matrice de jeu 
+	 int ChoixLigne-> ligne choisi
+	  int ChoixColonne-> Colonne choisi
+	char NewCouleur[10] -> couleur choisi
+	 
+
+Return :char* la matrice de jeu
+
+But : Fonction de debug pour modifier la matrice
+*/
 
 void setPixel(CASE matrice[L][C], int posL, int posC, char val[10]){
 	strcpy(matrice[posL][posC].couleur,val);
 }
 
-char* getMatrice(CASE matrice[L][C]) {
-    char* matstr = NULL;
-    int matstr_size = 0;
-    for (int i = 0; i < L; ++i) {
-        for (int j = 0; j < C; ++j) {
-            char* couleur = matrice[i][j].couleur;
-            int couleur_size = strlen(couleur);
-			matstr_size += couleur_size;
-            matstr = (char*)realloc(matstr, matstr_size + 1);// +1 pour le \0
-            strcat(matstr, couleur);   
-        }
-    }
-    return matstr;
-}
 
-char *getSize(){
-	printf("La commande est en cours d'éxecution \n");
-	char *size;
-	size = (char*)calloc(20, sizeof(char));
-	sprintf(size, "%d", L);
-	strcat(size, "\n");
-	char temp[3];
-	sprintf(temp, "%d", C);
-	strcat(size,temp);
-	return size;
-}
+
+
+/* char* GetSizeCommande(char MotAReturn[256])
+
+params : char MotAReturn[256]-> valeur de retour
+	 
+
+Return :char* Message pour le getSize
+
+But : Renvoyer les infos pour le cas ou le client utilise /getSize
+*/
 
 
 char* GetSizeCommande(char MotAReturn[256]){
