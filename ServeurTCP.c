@@ -21,6 +21,8 @@
 #define VERSION 1.5
 
 int POSITION_TABLEAU = 1;
+int modulo=0;
+int ancien_modulo=0;
 int tableau_coup_Restant[10]={1,1,1,1,1,1,1,1,1,1};
 char messageEnvoi[2000];/* le message de la couche Application ! */
 char TableauDecoupage[3][500];
@@ -266,11 +268,13 @@ int main(int argc, char *argv[])
 	initMatrice(MatriceDeJeu);
 	// boucle d’attente de connexion : en théorie, un serveur attend indéfiniment !
 	Users* test=ListeUsersPoll.first;
+	
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	while(1)
 	{
 	
-			time_t now = time(NULL); // obtenir l'heure actuelle en secondes depuis l'époque UNIX
+		
+		time_t now = time(NULL); // obtenir l'heure actuelle en secondes depuis l'époque UNIX
 		 struct tm * timeinfo = localtime(&now); // convertir en structure tm contenant les informations de temps	
 		    sec_left = 60 - timeinfo->tm_sec;
 		    statut=0;
@@ -285,8 +289,7 @@ int main(int argc, char *argv[])
 		    	
 		    		tableau_coup_Restant[i]=1;
 		    	}
-		    }
-		   printf("Il reste %d secondes avant la prochaine minute.\n", sec_left);
+		    }	
 		//printf("Dans le while \n"); //Partie init du poll
 		if(poll(ListeConnec,10,-1)==-1){
 			printf("Erreur Init du poll \n");
@@ -319,16 +322,14 @@ int main(int argc, char *argv[])
 			
 			
 		}
-		else{
 		
-			//printf("Pas de connection \n");
-		}
-		// c’est un appel bloquant
+	
 		
 
 		for(int i=1;i<11;i++){
 			 //printf("Action? \n");
 			 
+		  // printf("Il reste %d secondes avant la prochaine minute.\n", sec_left);
 			 if (ListeConnec[i].revents & POLLIN && ListeConnec[i].fd!=-1) {
 			 	printf("Action detectée pour i= %d \n",i);
 			 	actionUsers=i;
@@ -349,6 +350,7 @@ int main(int argc, char *argv[])
 			 	
 			 	}
 			 	else{
+			 		//close(ListeConnec[i].fd);
 			 		printf("Lecture d'un message \n");
 			 		messageRecu[DetectionAction]='\0';
 			 		MessageADecomposer(messageRecu);
@@ -384,18 +386,20 @@ int main(int argc, char *argv[])
 				}
 			 }
 			 
+			 
 		}
 		
 		
 		//printf("Apres le lus \n");
+		
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		
 		// On envoie des données vers le client (cf. protocole)
 	//strcpy(messageEnvoi,"");	
 	}
-
+	//printf("Ceci est un test \n");
 	// On ferme la ressource avant de quitter
-	close(socketEcoute);
+	//close(socketEcoute);
 	return 0;
 }
 
@@ -889,6 +893,8 @@ void TestDecoupageMessage(){
 
 void MessageADecomposer(char Message[LG_MESSAGE]){
 
+
+	
 	printf("Entrez dans MessageADecomposer \n");
 	printf("Voici le message recu : [%s] \n",Message);
 	char MessageAfficheClient[256];
@@ -898,13 +904,13 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 
 	    // On teste si la chaîne commence par le motif
 	    
-	if(strcmp(Message,"/getSize\n")==0){  //done
+	if(strcmp(Message,"/getSize\0")==0){  //done
 		printf("Commande ok /getSize \n");
 		
 		strcpy(messageEnvoi,GetSizeCommande(MessageAfficheClient));
 		
 	}
-	else if(strcmp(Message,"/getMatrice\n")==0){
+	else if(strcmp(Message,"/getMatrice\0")==0){
 		printf("Commande ok /getMatrice \n");
 		 //strcpy(messageEnvoi,getMatrice(matrice, l*c));
 		 //AfficheMatriceDeJeu(MatriceDeJeu);
@@ -928,21 +934,21 @@ void MessageADecomposer(char Message[LG_MESSAGE]){
 		 printf("Fin de /getMatrice \n");
 	
 	}
-	else if(strcmp(Message,"/getLimits\n")==0){ //done
+	else if(strcmp(Message,"/getLimits\0")==0){ //done
 		printf("Commande ok /getLimits \n");
 		strcpy(messageEnvoi,GetLimitCommande(MessageAfficheClient));
 		//printf(messageEnvoi);
 	
 	}
-	else if(strcmp(Message,"/getVersion\n")==0){
+	else if(strcmp(Message,"/getVersion\0")==0){
 		printf("Commande ok /getVersion \n");
 		//printf("Version 1.2 \n");
 		strcpy(messageEnvoi,"Version 1");
 	
 	}
-	else if(strcmp(Message,"/getWaitTime\n")==0){
+	else if(strcmp(Message,"/getWaitTime\0")==0){
 		printf("Commande ok /getWaitTime \n");
-		char str[5];
+		char str[20];
 		sprintf(str, "%d", sec_left);
 		strcpy(messageEnvoi,str);
 		printf("Fin de copy getwaitTime\n");
