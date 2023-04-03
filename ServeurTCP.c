@@ -8,6 +8,7 @@
 #include <arpa/inet.h> /* pour htons et inet_aton */
 #include <poll.h>
 #include<time.h>
+#include <math.h>
 
 
 
@@ -35,6 +36,8 @@ int b64invs[] = { 62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58,
 	21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28,
 	29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
 	43, 44, 45, 46, 47, 48, 49, 50, 51 };
+	
+	const char* base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
 typedef struct CASE{
@@ -132,6 +135,12 @@ int b64_isvalidchar(char c);
 size_t b64_encoded_size(size_t inlen);
 int TestChiffreDansBits(char* IN);
 void AfficheStatUser(Users *User);
+int char_in_array(char c, const char* array);
+void ConvertirB64ToBin(char* input);
+void int_to_binary(unsigned int n, char* binary);
+void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3);
+int TransformeBinaire(char* input);
+int testValeurRGB(int test);
 
 
 void TestLancementServeur(int argc, char *argv[]){
@@ -449,6 +458,7 @@ int TestChiffreDansBits(char* IN){
 		else{
 			printf("Erreur dans le test , pas un chiffre \n");
 			strcpy(messageEnvoi,"12 Bad Color");
+			printf("Après le strcpy \n");
 			return -1;
 		}
 	}
@@ -471,11 +481,14 @@ void AfficheStatUser(Users *User){
 void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 
 	printf("La couleur est : %s \n",MessageColor);
-	
+	int valeur_Bin=0;
 	char CHAINE_ENCODE[40];
 	char CHAINE_DECODE[40];
 	char test;
 	char test2;
+	char test12[30]="";
+	char test22[30]="";
+	char test32[30]="";
 	MessageColor[strlen(MessageColor) - 1] = '\0';
 	printf("Valeur du strlen :%d \n",strlen(MessageColor));
 	
@@ -487,22 +500,35 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 			
 			//strcpy(CHAINE_ENCODE,base64_encode(MessageColor)); 
 			strcpy(CHAINE_ENCODE,MessageColor);// encode en base64 
-			unsigned int SIZE_OF_ENCODE=b64_encoded_size(strlen(CHAINE_ENCODE));
+			//unsigned int SIZE_OF_ENCODE=b64_encoded_size(strlen(CHAINE_ENCODE));
 			printf(" [%s] encoded \n",CHAINE_ENCODE); //j'affiche
-			printf("Valeur de b64_encoded_size : %d \n",SIZE_OF_ENCODE);
+			//printf("Valeur de b64_encoded_size : %d \n",SIZE_OF_ENCODE);
 			//test=base64_to_ascii(test2);
 			//strcpy(NEWSTR,base64_to_bits(NEWSTR2)); //conversion bits 
-			int test_valeur=b64_decode(CHAINE_ENCODE,CHAINE_DECODE,10);
+			//int test_valeur=b64_decode(CHAINE_ENCODE,CHAINE_DECODE,10);
+			ConvertirB64ToBin(CHAINE_ENCODE);
+			SplitCharEn3(CHAINE_ENCODE,test12,test22,test32);
+			printf("Valeur des merdes : [%s] [%s] [%s] \n",test12,test22,test32);
 			
+			int valeur_Bin1 = TransformeBinaire(test12);
+			printf("Valeur_bin1= [%d] \n",valeur_Bin1);
+			int test_chiffre1=testValeurRGB(valeur_Bin1);
+			int valeur_Bin2 = TransformeBinaire(test22);
+			printf("Valeur_bin2= [%d] \n",valeur_Bin2);
+			int test_chiffre2=testValeurRGB(valeur_Bin2);
+			int valeur_Bin3 = TransformeBinaire(test32);
+			printf("Valeur_bin3= [%d] \n",valeur_Bin3);
+			int test_chiffre3=testValeurRGB(valeur_Bin3);
 			//printf("Chaine décode ? [%c] \n",test);
 			//printf("Chaine décode2 ? [%s] \n",NEWSTR);
-			printf("Chaine décode2 ? [%02x] \n",CHAINE_DECODE);
-			printf("Chaine décode2 en s ? [%s] \n",CHAINE_DECODE);
+			//printf("Chaine décode2 ? [%02x] \n",CHAINE_DECODE);
+			//printf("Chaine décode2 en s ? [%s] \n",CHAINE_DECODE);
 			//unsigned int test_size=b64_decoded_size(NEWSTR);
-			unsigned int test_size=b64_decoded_size(CHAINE_DECODE);
-			printf("Valeur de b64_decoded_size : %d \n",test_size);
-			int test_chiffre=TestChiffreDansBits(CHAINE_DECODE);
-			if(test_chiffre==-1){
+			//unsigned int test_size=b64_decoded_size(CHAINE_DECODE);
+			//printf("Valeur de b64_decoded_size : %d \n",test_size);
+			//int test_chiffre=TestChiffreDansBits(CHAINE_DECODE);
+		
+			if(test_chiffre1==-1 || test_chiffre2==-1 || test_chiffre3==-1){
 			
 				strcpy(messageEnvoi,"12 Bad Color");
 			}
@@ -565,6 +591,87 @@ void TestBadColor(char MessageColor[20],int Ligne,int Colonne){
 
 }
 
+int testValeurRGB(int test){
+
+	if(test<0 || test>255){
+	
+		printf("Erreur dans la couleur \n");
+		return -1;
+	}else{
+		printf("Couleur valide \n");
+		return 1;
+	}
+}
+
+int TransformeBinaire(char* input){
+	unsigned int valeur=0;
+	for(int i=0;i<strlen(input);i++){
+		//printf("Valeur de input[i]-48  : [%d] \n",input[i]-48);
+		//int test=pow(2,i);
+		valeur=valeur+(pow(2,strlen(input)-1-i)*(input[i]-48));
+		//printf("debug %d \n",pow(2,2));
+	}
+	printf("Valeur : [%d] \n",valeur);
+	return valeur;
+}
+
+int char_in_array(char c, const char* array) {
+    size_t len = strlen(array);
+    int index=0;
+    for (size_t i = 0; i < len; i++) {
+        if (array[i] == c) {
+            return index;
+        }
+        else{
+        	index++;
+        }
+    }
+    return -1;
+}
+
+void ConvertirB64ToBin(char* input){
+	int index=0;
+	int test;
+	char test2[40];
+	char reconstitution[80];
+	for(int i=0; i<strlen(input);i++){
+		index=char_in_array(input[i], base64_chars);
+		printf("Valeur trouvé : [%d] \n",index); //Ensuite convertir en binaire
+		//test=int_to_binary(index);
+		//printf("Valeur de test : [%d] \n",test);
+		//strcpy(test2,int_to_binary(index));
+		int_to_binary(index,test2);
+		if(i==0){
+		
+		strcpy(reconstitution,test2);
+		}
+		else{
+		strcat(reconstitution,test2);
+		}
+		printf("Fin de conversion ? [%s] \n",test2);
+	}
+	printf("Voila la chaine entière : [%s] \n",reconstitution);
+	strcpy(input,reconstitution);
+}
+
+
+void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3) {
+    int len = strlen(input_str);
+    int part_len = len / 3;
+    strncpy(output_str_1, input_str, part_len);
+    strncpy(output_str_2, input_str + part_len, part_len);
+    strncpy(output_str_3, input_str + 2 * part_len, part_len);
+    printf("Valeur des merdes : [%s] [%s] [%s] \n",output_str_1,output_str_2,output_str_3);
+}
+
+void int_to_binary(unsigned int n, char* binary) {
+    int i;
+    for (i = 5; i >= 0; i--) {
+        binary[i] = (n % 2) + '0';
+        n /= 2;
+    }
+    binary[6] = '\0';
+}
 
 size_t b64_encoded_size(size_t inlen)
 {
