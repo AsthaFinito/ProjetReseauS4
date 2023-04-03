@@ -132,7 +132,7 @@ int main(int argc, char *argv[]){
 				//exit(-1);
 				break;
 			default:/* réception de n octets */
-				printf("Dans le default \n");
+				//printf("Dans le default \n");
 				messageRecu[lus]='\0';
 				InterpretationMessageBoucle(messageRecu);
 				//printf("Message reçu du serveur : %s (%d octets)\n\n", messageRecu, lus);
@@ -223,7 +223,7 @@ void SplitCharEn3(char* input_str, char* output_str_1, char* output_str_2, char*
     strncpy(output_str_1, input_str, part_len);
     strncpy(output_str_2, input_str + part_len, part_len);
     strncpy(output_str_3, input_str + 2 * part_len, part_len);
-    printf("Valeur des merdes : [%s] [%s] [%s] \n",output_str_1,output_str_2,output_str_3);
+   // printf("Valeur des merdes : [%s] [%s] [%s] \n",output_str_1,output_str_2,output_str_3);
 }
 
 void SplitCharEn4(char* input_str, char* output_str_1, char* output_str_2, char* output_str_3, char* output_str_4) {
@@ -238,7 +238,7 @@ void SplitCharEn4(char* input_str, char* output_str_1, char* output_str_2, char*
     output_str_2[part_len] = '\0';
     output_str_3[part_len] = '\0';
     output_str_4[part_len] = '\0';
-     printf("Valeur des merdes : [%s] [%s] [%s] [%s] \n",output_str_1,output_str_2,output_str_3,output_str_4);
+    // printf("Valeur des merdes : [%s] [%s] [%s] [%s] \n",output_str_1,output_str_2,output_str_3,output_str_4);
 }
 
 
@@ -295,12 +295,12 @@ void CasSetPixel(){
    	 reconstitution[0]=V1;
    	 V1=TransformeBinaire(test2);
    	 reconstitution[1]=V1;
-   	  //printf("V1 = [%c] \n",V1);
+   	//  printf("V1 = [%c] \n",V1);
    	 V1=TransformeBinaire(test3);
-   	  //printf("V1 = [%c] \n",V1);
+   	 // printf("V1 = [%c] \n",V1);
    	  reconstitution[2]=V1;
    	 V1=TransformeBinaire(test4);
-   	  //printf("V1 = [%c] \n",V1);
+   	 // printf("V1 = [%c] \n",V1);
    	  reconstitution[3]=V1;
    	  reconstitution[4]='\0';
    	  //printf("Voici la reconstitution : [%s] \n",reconstitution);
@@ -337,16 +337,16 @@ int Menu(){
     	if (pos >= 0 && pos < strlen(input)) {
     	
         	input[pos] = '\0';
-        	printf(" backslashN enlevé à %d\n",pos);
+        	//printf(" backslashN enlevé à %d\n",pos);
    	 }
    	 else{
    	 
-   	 	printf("Pas de modification \n");
+   	 	//printf("Pas de modification \n");
    	 }
-	printf("Voici la touche tapé : [%s] \n",input);
+	//printf("Voici la touche tapé : [%s] \n",input);
 	int test_FinInterpretation=InterpretationMenu(input);
 	if(test_FinInterpretation==1){
-		printf("Envoie au serveur : [%s]\n",messageEnvoi);
+		//printf("Envoie au serveur : [%s]\n",messageEnvoi);
 		return 1;
 	}
 	else{
@@ -361,7 +361,7 @@ void InterpretationMessageBoucle(char *MessageRecu){
 
 	//printf("Interprétation en cours \n");
 	printf("Reponse du serveur :\n%s \n",MessageRecu);
-	printf("Affichage de la matrice : \n");
+	//printf("Affichage de la matrice : \n");
 	int compteur=0;
 	
 		//for(int j=0;j<strlen(MessageRecu);j++){
@@ -430,9 +430,9 @@ void print_bits(int n) {
     int i;
     for (i = 7; i >= 0; i--) {
         int bit = (n >> i) & 1;
-        printf("%d", bit);
+        //printf("%d", bit);
     }
-    printf("\n");
+   // printf("\n");
 }
 
 char* int_to_binary_string(int n) {
@@ -444,6 +444,9 @@ char* int_to_binary_string(int n) {
         temp >>= 1;
     }
     if (num_bits == 0) num_bits = 1; // Pour le cas où n est égal à 0
+    if (num_bits < 8) {
+        num_bits = 8;
+    }
     
     char* binary_str = malloc((num_bits + 1) * sizeof(char));
     if (binary_str == NULL) {
@@ -468,7 +471,7 @@ char TransformeBinaire(char* input){
 		valeur=valeur+(pow(2,strlen(input)-1-i)*(input[i]-48));
 		//printf("debug %d \n",pow(2,2));
 	}
-	printf("Valeur : [%d] \n",valeur);
+	//printf("Valeur : [%d] \n",valeur);
 	return base46_map[valeur];
 }
 
